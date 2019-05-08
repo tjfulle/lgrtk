@@ -49,7 +49,6 @@ private:
 
     Plato::ScalarMultiVector mAdjoints;
     Plato::ScalarVector mResidual;
-    Plato::ScalarVector mBoundaryLoads;
 
     Plato::ScalarMultiVector mStates;
 
@@ -72,7 +71,6 @@ public:
             mConstraint(nullptr),
             mObjective(nullptr),
             mResidual("MyResidual", mEqualityConstraint.size()),
-            mBoundaryLoads("BoundaryLoads", mEqualityConstraint.size()),
             mStates("States", mNumSteps, mEqualityConstraint.size()),
             mJacobian(Teuchos::null),
             mJacobianP(Teuchos::null),
@@ -121,15 +119,8 @@ public:
     }
 
     /******************************************************************************/
-    void applyBoundaryLoads(const Plato::ScalarVector & aForce)
+    void applyBoundaryLoads(const Plato::ScalarVector & aForce) { }
     /******************************************************************************/
-    {
-        auto tBoundaryLoads = mBoundaryLoads;
-        auto tNumDofs = aForce.size();
-        Kokkos::parallel_for(Kokkos::RangePolicy<>(0, tNumDofs), LAMBDA_EXPRESSION(const Plato::OrdinalType & aDofOrdinal){
-            aForce(aDofOrdinal) += tBoundaryLoads(aDofOrdinal);
-        }, "add boundary loads");
-    }
 
     /******************************************************************************//**
      * @brief Update physics-based parameters within optimization iterations
@@ -557,12 +548,6 @@ private:
         Plato::EssentialBCs<SimplexPhysics>
             tEssentialBoundaryConditions(aParamList.sublist("Essential Boundary Conditions",false));
         tEssentialBoundaryConditions.get(aMeshSets, mBcDofs, mBcValues);
-
-        // parse loads
-        //
-        Plato::NaturalBCs<SimplexPhysics::SpaceDim, SimplexPhysics::m_numDofsPerNode>
-            tNaturalBoundaryConditions(aParamList.sublist("Natural Boundary Conditions", false));
-        tNaturalBoundaryConditions.get(&aMesh, aMeshSets, mBoundaryLoads);
     }
 };
 
