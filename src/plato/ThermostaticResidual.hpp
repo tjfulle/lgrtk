@@ -11,6 +11,7 @@
 #include "plato/Simp.hpp"
 #include "plato/Ramp.hpp"
 #include "plato/Heaviside.hpp"
+#include "plato/PlatoCubatureFactory.hpp"
 
 #include "plato/LinearThermalMaterial.hpp"
 #include "plato/AbstractVectorFunction.hpp"
@@ -49,43 +50,40 @@ class ThermostaticResidual :
 
     Omega_h::Matrix< SpaceDim, SpaceDim> m_cellConductivity;
     
-    Plato::Scalar m_quadratureWeight;
-
     IndicatorFunctionType m_indicatorFunction;
     ApplyWeighting<SpaceDim,SpaceDim,IndicatorFunctionType> m_applyWeighting;
 
     std::shared_ptr<Plato::NaturalBCs<SpaceDim,m_numDofsPerNode>> m_boundaryLoads;
+
+    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
 
   public:
     /**************************************************************************/
     ThermostaticResidual(Omega_h::Mesh& aMesh,
                          Omega_h::MeshSets& aMeshSets,
                          Plato::DataMap& aDataMap,
-                         Teuchos::ParameterList& problemParams,
-                         Teuchos::ParameterList& penaltyParams) :
+                         Teuchos::ParameterList& aProblemParams,
+                         Teuchos::ParameterList& aPenaltyParams) :
             Plato::AbstractVectorFunction<EvaluationType>(aMesh, aMeshSets, aDataMap),
-            m_indicatorFunction(penaltyParams),
+            m_indicatorFunction(aPenaltyParams),
             m_applyWeighting(m_indicatorFunction),
             m_boundaryLoads(nullptr)
     /**************************************************************************/
     {
-      Plato::ThermalModelFactory<SpaceDim> mmfactory(problemParams);
+      Plato::ThermalModelFactory<SpaceDim> mmfactory(aProblemParams);
       auto materialModel = mmfactory.create();
       m_cellConductivity = materialModel->getConductivityMatrix();
 
-      m_quadratureWeight = 1.0; // for a 1-point quadrature rule for simplices
-      for (Plato::OrdinalType d=2; d<=SpaceDim; d++)
-      { 
-        m_quadratureWeight /= Plato::Scalar(d);
-      }
-
       // parse boundary Conditions
       // 
-      if(problemParams.isSublist("Natural Boundary Conditions"))
+      if(aProblemParams.isSublist("Natural Boundary Conditions"))
       {
-          m_boundaryLoads = std::make_shared<Plato::NaturalBCs<SpaceDim,m_numDofsPerNode>>(problemParams.sublist("Natural Boundary Conditions"));
+          m_boundaryLoads = std::make_shared<Plato::NaturalBCs<SpaceDim,m_numDofsPerNode>>(aProblemParams.sublist("Natural Boundary Conditions"));
       }
     
+       Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+       mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
+
     }
 
 
@@ -125,12 +123,12 @@ class ThermostaticResidual :
       Plato::FluxDivergence<SpaceDim>        fluxDivergence;
     
       auto& applyWeighting  = m_applyWeighting;
-      auto quadratureWeight = m_quadratureWeight;
+      auto quadratureWeight = mCubatureRule->getCubWeights();
       Kokkos::parallel_for(Kokkos::RangePolicy<>(0,numCells), LAMBDA_EXPRESSION(Plato::OrdinalType cellOrdinal)
       {
     
         computeGradient(cellOrdinal, gradient, config, cellVolume);
-        cellVolume(cellOrdinal) *= quadratureWeight;
+        cellVolume(cellOrdinal) *= quadratureWeight(cellOrdinal);
     
         // compute temperature gradient
         //

@@ -74,6 +74,11 @@ if (LGR_ENABLE_PLATO)
     ${Trilinos_LIBRARIES} 
     ${Trilinos_TPL_LIBRARIES} 
     )
+  if (LGR_ENABLE_PLATO_GEOMETRY AND LGR_ENABLE_PLATO_MPMD)
+    target_include_directories(StructuralDynamicsUnitTests PRIVATE "${PLATO_PREFIX}/include")
+    target_link_libraries(StructuralDynamicsUnitTests ${PLATO_LIBS} ${PLATO_LIBS})
+  endif()
+
   target_include_directories(StructuralDynamicsUnitTests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
   build_mpi_test_string(ES_MPI_TEST 1 ${CMAKE_CURRENT_BINARY_DIR}/StructuralDynamicsUnitTests)
@@ -101,6 +106,12 @@ if (LGR_ENABLE_PLATO)
     ${Trilinos_LIBRARIES} 
     ${Trilinos_TPL_LIBRARIES} 
     )
+
+  if (LGR_ENABLE_PLATO_GEOMETRY AND LGR_ENABLE_PLATO_MPMD)
+    target_include_directories(HamiltonJacobiUnitTests PRIVATE "${PLATO_PREFIX}/include")
+    target_link_libraries(HamiltonJacobiUnitTests ${PLATO_LIBS} ${PLATO_LIBS})
+  endif()
+
   target_include_directories(HamiltonJacobiUnitTests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
   build_mpi_test_string(ES_MPI_TEST 1 ${CMAKE_CURRENT_BINARY_DIR}/HamiltonJacobiUnitTests)
@@ -128,6 +139,12 @@ if (LGR_ENABLE_PLATO)
     ${Trilinos_LIBRARIES} 
     ${Trilinos_TPL_LIBRARIES} 
     )
+
+  if (LGR_ENABLE_PLATO_GEOMETRY AND LGR_ENABLE_PLATO_MPMD)
+    target_include_directories(AlgebraicRocketUnitTests PRIVATE "${PLATO_PREFIX}/include")
+    target_link_libraries(AlgebraicRocketUnitTests ${PLATO_LIBS} ${PLATO_LIBS})
+  endif()
+
   target_include_directories(AlgebraicRocketUnitTests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
   build_mpi_test_string(ES_MPI_TEST 1 ${CMAKE_CURRENT_BINARY_DIR}/AlgebraicRocketUnitTests)
@@ -155,6 +172,12 @@ if (LGR_ENABLE_PLATO)
     ${Trilinos_LIBRARIES} 
     ${Trilinos_TPL_LIBRARIES} 
     )
+
+  if (LGR_ENABLE_PLATO_GEOMETRY AND LGR_ENABLE_PLATO_MPMD)
+    target_include_directories(AugLagStressUnitTests PRIVATE "${PLATO_PREFIX}/include")
+    target_link_libraries(AugLagStressUnitTests ${PLATO_LIBS} ${PLATO_LIBS})
+  endif()
+
   target_include_directories(AugLagStressUnitTests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
   build_mpi_test_string(ES_MPI_TEST 1 ${CMAKE_CURRENT_BINARY_DIR}/AugLagStressUnitTests)
@@ -182,6 +205,12 @@ if (LGR_ENABLE_PLATO)
     ${Trilinos_LIBRARIES} 
     ${Trilinos_TPL_LIBRARIES} 
     )
+
+  if (LGR_ENABLE_PLATO_GEOMETRY AND LGR_ENABLE_PLATO_MPMD)
+    target_include_directories(PlatoMathHelpersUnitTests PRIVATE "${PLATO_PREFIX}/include")
+    target_link_libraries(PlatoMathHelpersUnitTests ${PLATO_LIBS} ${PLATO_LIBS})
+  endif()
+
   target_include_directories(PlatoMathHelpersUnitTests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
   build_mpi_test_string(ES_MPI_TEST 1 ${CMAKE_CURRENT_BINARY_DIR}/PlatoMathHelpersUnitTests)
@@ -208,6 +237,12 @@ if (LGR_ENABLE_PLATO)
     ${Trilinos_LIBRARIES} 
     ${Trilinos_TPL_LIBRARIES} 
     )
+
+  if (LGR_ENABLE_PLATO_GEOMETRY AND LGR_ENABLE_PLATO_MPMD)
+    target_include_directories(PlatoFunctorsUnitTests PRIVATE "${PLATO_PREFIX}/include")
+    target_link_libraries(PlatoFunctorsUnitTests ${PLATO_LIBS} ${PLATO_LIBS})
+  endif()
+
   target_include_directories(PlatoFunctorsUnitTests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
   build_mpi_test_string(ES_MPI_TEST 1 ${CMAKE_CURRENT_BINARY_DIR}/PlatoFunctorsUnitTests)
@@ -263,6 +298,12 @@ if (LGR_ENABLE_PLATO)
     ${Trilinos_LIBRARIES} 
     ${Trilinos_TPL_LIBRARIES} 
     )
+
+  if (LGR_ENABLE_PLATO_GEOMETRY AND LGR_ENABLE_PLATO_MPMD)
+    target_include_directories(ElectroelasticUnitTests PRIVATE "${PLATO_PREFIX}/include")
+    target_link_libraries(ElectroelasticUnitTests ${PLATO_LIBS} ${PLATO_LIBS})
+  endif()
+
   target_include_directories(ElectroelasticUnitTests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
   build_mpi_test_string(ES_MPI_TEST 1 ${CMAKE_CURRENT_BINARY_DIR}/ElectroelasticUnitTests)
@@ -288,6 +329,12 @@ if (LGR_ENABLE_PLATO)
     ${Trilinos_LIBRARIES} 
     ${Trilinos_TPL_LIBRARIES} 
     )
+
+  if (LGR_ENABLE_PLATO_GEOMETRY AND LGR_ENABLE_PLATO_MPMD)
+    target_include_directories(ThermoelasticUnitTests PRIVATE "${PLATO_PREFIX}/include")
+    target_link_libraries(ThermoelasticUnitTests ${PLATO_LIBS} ${PLATO_LIBS})
+  endif()
+
   target_include_directories(ThermoelasticUnitTests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
   build_mpi_test_string(ES_MPI_TEST 1 ${CMAKE_CURRENT_BINARY_DIR}/ThermoelasticUnitTests)
@@ -313,6 +360,12 @@ if (LGR_ENABLE_PLATO)
     ${Trilinos_LIBRARIES} 
     ${Trilinos_TPL_LIBRARIES} 
     )
+
+  if (LGR_ENABLE_PLATO_GEOMETRY AND LGR_ENABLE_PLATO_MPMD)
+    target_include_directories(TransientThermomechUnitTests PRIVATE "${PLATO_PREFIX}/include")
+    target_link_libraries(TransientThermomechUnitTests ${PLATO_LIBS} ${PLATO_LIBS})
+  endif()
+
   target_include_directories(TransientThermomechUnitTests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
   build_mpi_test_string(ES_MPI_TEST 1 ${CMAKE_CURRENT_BINARY_DIR}/TransientThermomechUnitTests)
@@ -323,6 +376,12 @@ if (LGR_ENABLE_PLATO)
     ${Trilinos_LIBRARIES} 
     ${Trilinos_TPL_LIBRARIES} 
     )
+
+  if (LGR_ENABLE_PLATO_GEOMETRY AND LGR_ENABLE_PLATO_MPMD)
+    target_include_directories(DerivativeUnitTests PRIVATE "${PLATO_PREFIX}/include")
+    target_link_libraries(DerivativeUnitTests ${PLATO_LIBS} ${PLATO_LIBS})
+  endif()
+
   target_include_directories(DerivativeUnitTests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
   build_mpi_test_string(ES_MPI_TEST 1 ${CMAKE_CURRENT_BINARY_DIR}/DerivativeUnitTests)
@@ -333,6 +392,12 @@ if (LGR_ENABLE_PLATO)
     ${Trilinos_LIBRARIES} 
     ${Trilinos_TPL_LIBRARIES} 
     )
+
+  if (LGR_ENABLE_PLATO_GEOMETRY AND LGR_ENABLE_PLATO_MPMD)
+    target_include_directories(HeatEquationUnitTests PRIVATE "${PLATO_PREFIX}/include")
+    target_link_libraries(HeatEquationUnitTests ${PLATO_LIBS} ${PLATO_LIBS})
+  endif()
+
   target_include_directories(HeatEquationUnitTests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
   build_mpi_test_string(ES_MPI_TEST 1 ${CMAKE_CURRENT_BINARY_DIR}/HeatEquationUnitTests)

@@ -236,8 +236,6 @@ if (LGR_ENABLE_PLATO_3D)
   message("-- Plato: 3d physics added")
 endif()
 
-ADD_SUBDIRECTORY(src)
-
 
 ###### PLATO ANALYZE APP + PLATO ENGINE EXECUTABLE ######
 option(LGR_ENABLE_PLATO_MPMD "Enable the Plato interface MPMD executable" OFF)
@@ -260,7 +258,7 @@ if (LGR_ENABLE_PLATO_MPMD)
   add_library( LGR_App src/plato/LGR_App.cpp )
   target_include_directories(LGR_App PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
   target_include_directories(LGR_App PRIVATE "${PLATO_PREFIX}/include")
-  target_link_libraries(LGR_App ${PLATO_LIBS} ${PLATO_LIBS} lgrtk)
+  target_link_libraries(LGR_App lgrtk ${PLATO_LIBS} ${PLATO_LIBS})
   if( CMAKE_INSTALL_PREFIX )
     install( TARGETS LGR_App DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
   endif()
@@ -271,6 +269,9 @@ if (LGR_ENABLE_PLATO_MPMD)
   endif()
   target_include_directories(LGR_MPMD PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
   target_include_directories(LGR_MPMD PRIVATE "${PLATO_PREFIX}/include")
+
+  target_include_directories(lgr PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
   set(PLATO_LIBS
       ${PLATO_DATA_LAYER_LIB}
       ${PLATO_INTERFACE_LIB}
@@ -294,7 +295,8 @@ if (LGR_ENABLE_PLATO_MPMD)
     set(PLATO_LIBS ${PLATO_LIBS} ${PLATO_GEOMETRY_MLS_LIB} ${PLATO_GEOMETRY_COGENT_LIB} pamgen)
   endif()
 
-  target_link_libraries(LGR_MPMD LGR_App ${PLATO_LIBS} ${PLATO_LIBS} lgrtk)
+  target_link_libraries(LGR_MPMD LGR_App lgrtk ${PLATO_LIBS} ${PLATO_LIBS})
+
 
   option(LGR_ENABLE_PLATO_PYTHON "Enable the Plato Python interface" OFF)
   if (LGR_ENABLE_PLATO_PYTHON)
@@ -313,9 +315,15 @@ if (LGR_ENABLE_PLATO_MPMD)
   option(LGR_ENABLE_PLATO_GEOMETRY "Enable Plato Geometry" OFF)
   if (LGR_ENABLE_PLATO_GEOMETRY)
     add_definitions(-DPLATO_GEOMETRY)
+    target_include_directories(lgr PRIVATE "${PLATO_PREFIX}/include")
+    target_link_libraries(lgr lgrtk ${PLATO_LIBS} ${PLATO_LIBS})
   endif()
 
 endif()
+
+
+ADD_SUBDIRECTORY(src)
+
 
 ###### START ROCKET APP EXECUTABLE ######
 if (LGR_ENABLE_PLATO_MPMD)
@@ -366,7 +374,7 @@ if (LGR_ENABLE_PLATO_MPMD)
     set(PLATO_LIBS ${PLATO_LIBS} ${PLATO_GEOMETRY_MLS_LIB} ${PLATO_GEOMETRY_COGENT_LIB} pamgen)
   endif()
 
-  target_link_libraries(ROCKET_MPMD ${PLATO_LIBS} ${PLATO_LIBS} lgrtk)
+  target_link_libraries(ROCKET_MPMD lgrtk ${PLATO_LIBS} ${PLATO_LIBS})
 
 endif()
 ###### END ROCKET APP EXECUTABLE ######
@@ -412,7 +420,14 @@ if (LGR_ENABLE_PLATO_MPMD)
       exodus
      )
 
-  target_link_libraries(ROCKET ${PLATO_LIBS} ${PLATO_LIBS} lgrtk)
+  if (LGR_ENABLE_PLATO_GEOMETRY)
+    find_library(PLATO_GEOMETRY_MLS_LIB NAMES PlatoGeometryMLS PATHS ${PLATO_PREFIX}/lib)
+    find_library(PLATO_GEOMETRY_COGENT_LIB NAMES PlatoGeometryCogent PATHS ${PLATO_PREFIX}/lib)
+    find_package(Pamgen REQUIRED)
+    set(PLATO_LIBS ${PLATO_LIBS} ${PLATO_GEOMETRY_MLS_LIB} ${PLATO_GEOMETRY_COGENT_LIB} pamgen)
+  endif()
+
+  target_link_libraries(ROCKET lgrtk ${PLATO_LIBS} ${PLATO_LIBS})
 
 endif()
 ###### END ROCKET EXECUTABLE ######

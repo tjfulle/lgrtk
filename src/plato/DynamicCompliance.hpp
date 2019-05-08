@@ -27,7 +27,7 @@
 #include "plato/LinearElasticMaterial.hpp"
 #include "plato/ComplexInertialEnergy.hpp"
 #include "plato/AbstractScalarFunction.hpp"
-#include "plato/LinearTetCubRuleDegreeOne.hpp"
+#include "plato/PlatoCubatureFactory.hpp"
 #include "plato/SimplexStructuralDynamics.hpp"
 
 namespace Plato
@@ -59,7 +59,7 @@ private:
     Plato::ApplyProjection<ProjectionFuncType> mApplyProjection;
 
     Omega_h::Matrix<m_numVoigtTerms, m_numVoigtTerms> mCellStiffness;
-    std::shared_ptr<Plato::LinearTetCubRuleDegreeOne<EvaluationType::SpatialDim>> mCubatureRule;
+    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
 
 public:
     /**************************************************************************/
@@ -74,14 +74,16 @@ public:
             mPenaltyFunction(aPenaltyParams),
             mApplyPenalty(mPenaltyFunction),
             mApplyProjection(mProjectionFunction),
-            mCellStiffness(),
-            mCubatureRule(std::make_shared<Plato::LinearTetCubRuleDegreeOne<EvaluationType::SpatialDim>>())
+            mCellStiffness()
     /**************************************************************************/
     {
         // Create material model and get stiffness
         Plato::ElasticModelFactory<EvaluationType::SpatialDim> tElasticModelFactory(aProblemParams);
         auto tMaterialModel = tElasticModelFactory.create();
         mCellStiffness = tMaterialModel->getStiffnessMatrix();
+
+        Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+        mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
     /**************************************************************************/
     DynamicCompliance(Omega_h::Mesh& aMesh, Omega_h::MeshSets& aMeshSets, Plato::DataMap& aDataMap) :
@@ -91,8 +93,7 @@ public:
             mPenaltyFunction(3.0, 0.0),
             mApplyPenalty(mPenaltyFunction),
             mApplyProjection(mProjectionFunction),
-            mCellStiffness(),
-            mCubatureRule(std::make_shared<Plato::LinearTetCubRuleDegreeOne<EvaluationType::SpatialDim>>())
+            mCellStiffness()
     /**************************************************************************/
     {
         // Create material model and get stiffness
@@ -101,6 +102,9 @@ public:
         tParamList.set < Plato::Scalar > ("Youngs Modulus", 0.3);
         Plato::IsotropicLinearElasticMaterial<EvaluationType::SpatialDim> tDefaultMaterialModel(tParamList);
         mCellStiffness = tDefaultMaterialModel.getStiffnessMatrix();
+
+        Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+        mCubatureRule = tCubatureFactory.create(aMesh);
     }
 
     /**************************************************************************/
@@ -149,13 +153,13 @@ public:
         auto & tApplyPenalty = mApplyPenalty;
         auto & tApplyProjection = mApplyProjection;
         auto & tPenaltyFunction = mPenaltyFunction;
-        auto tQuadratureWeight = mCubatureRule->getCubWeight();
+        auto tQuadratureWeight = mCubatureRule->getCubWeights();
         auto tBasisFunctions = mCubatureRule->getBasisFunctions();
         Kokkos::parallel_for(Kokkos::RangePolicy<>(0, tNumCells), LAMBDA_EXPRESSION(const Plato::OrdinalType & aCellOrdinal)
         {
             // Internal forces contribution
             tComputeGradientWorkset(aCellOrdinal, tCellGradient, aConfig, tCellVolume);
-            tCellVolume(aCellOrdinal) *= tQuadratureWeight;
+            tCellVolume(aCellOrdinal) *= tQuadratureWeight(aCellOrdinal);
             tComputeVoigtStrain(aCellOrdinal, aState, tCellGradient, tCellStrain);
             tComputeVoigtStress(aCellOrdinal, tCellStrain, tCellStress);
 

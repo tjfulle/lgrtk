@@ -11,7 +11,7 @@
 #include "plato/TMKinetics.hpp"
 #include "plato/PlatoMathHelpers.hpp"
 #include "plato/StateValues.hpp"
-#include "plato/LinearTetCubRuleDegreeOne.hpp"
+#include "plato/PlatoCubatureFactory.hpp"
 #include "plato/InterpolateFromNodal.hpp"
 #include "plato/Simp.hpp"
 #include "plato/Ramp.hpp"
@@ -65,7 +65,8 @@ class TransientThermomechResidual :
     Plato::ApplyWeighting<SpaceDim, SpaceDim,         IndicatorFunctionType> m_applyFluxWeighting;
     Plato::ApplyWeighting<SpaceDim, NThrmDims,        IndicatorFunctionType> m_applyMassWeighting;
 
-    std::shared_ptr<Plato::LinearTetCubRuleDegreeOne<SpaceDim>> m_cubatureRule;
+    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> m_cubatureRule;
+
     std::shared_ptr<Plato::NaturalBCs<SpaceDim, NMechDims, m_numDofsPerNode, MDofOffset>> m_boundaryLoads;
     std::shared_ptr<Plato::NaturalBCs<SpaceDim, NThrmDims, m_numDofsPerNode, TDofOffset>> m_boundaryFluxes;
 
@@ -85,7 +86,6 @@ class TransientThermomechResidual :
      m_applyStressWeighting(m_indicatorFunction),
      m_applyFluxWeighting(m_indicatorFunction),
      m_applyMassWeighting(m_indicatorFunction),
-     m_cubatureRule(std::make_shared<Plato::LinearTetCubRuleDegreeOne<SpaceDim>>()),
      m_boundaryLoads(nullptr),
      m_boundaryFluxes(nullptr)
     /**************************************************************************/
@@ -108,6 +108,8 @@ class TransientThermomechResidual :
       {
           m_boundaryFluxes = std::make_shared<Plato::NaturalBCs<SpaceDim, NThrmDims, m_numDofsPerNode, TDofOffset>>(aProblemParams.sublist("Thermal Natural Boundary Conditions"));
       }
+      Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+      m_cubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
 
 
@@ -170,12 +172,12 @@ class TransientThermomechResidual :
       auto& applyStressWeighting = m_applyStressWeighting;
       auto& applyFluxWeighting   = m_applyFluxWeighting;
       auto& applyMassWeighting   = m_applyMassWeighting;
-      auto quadratureWeight = m_cubatureRule->getCubWeight();
+      auto quadratureWeight = m_cubatureRule->getCubWeights();
       Kokkos::parallel_for(Kokkos::RangePolicy<Plato::OrdinalType>(0,tNumCells), LAMBDA_EXPRESSION(Plato::OrdinalType cellOrdinal)
       {
     
         computeGradient(cellOrdinal, gradient, aConfig, cellVolume);
-        cellVolume(cellOrdinal) *= quadratureWeight;
+        cellVolume(cellOrdinal) *= quadratureWeight(cellOrdinal);
     
         // compute strain and temperature gradient
         //

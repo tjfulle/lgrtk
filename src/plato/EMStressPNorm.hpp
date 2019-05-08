@@ -11,7 +11,7 @@
 #include "plato/EMKinetics.hpp"
 #include "plato/TensorPNorm.hpp"
 #include "plato/AbstractScalarFunction.hpp"
-#include "plato/LinearTetCubRuleDegreeOne.hpp"
+#include "plato/PlatoCubatureFactory.hpp"
 #include "plato/ExpInstMacros.hpp"
 #include "plato/Simp.hpp"
 #include "plato/Ramp.hpp"
@@ -46,7 +46,7 @@ class EMStressPNorm :
 
     IndicatorFunctionType m_indicatorFunction;
     Plato::ApplyWeighting<SpaceDim,m_numVoigtTerms,IndicatorFunctionType> m_applyWeighting;
-    std::shared_ptr<Plato::LinearTetCubRuleDegreeOne<EvaluationType::SpatialDim>> m_CubatureRule;
+    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> m_CubatureRule;
 
     Teuchos::RCP<TensorNormBase<m_numVoigtTerms,EvaluationType>> m_norm;
 
@@ -59,8 +59,7 @@ class EMStressPNorm :
                   Teuchos::ParameterList& aPenaltyParams) :
               Plato::AbstractScalarFunction<EvaluationType>(aMesh, aMeshSets, aDataMap, "Stress P-Norm"),
               m_indicatorFunction(aPenaltyParams),
-              m_applyWeighting(m_indicatorFunction),
-              m_CubatureRule(std::make_shared<Plato::LinearTetCubRuleDegreeOne<EvaluationType::SpatialDim>>())
+              m_applyWeighting(m_indicatorFunction)
     /**************************************************************************/
     {
       Plato::ElectroelasticModelFactory<SpaceDim> mmfactory(aProblemParams);
@@ -70,6 +69,9 @@ class EMStressPNorm :
 
       TensorNormFactory<m_numVoigtTerms, EvaluationType> normFactory;
       m_norm = normFactory.create(params);
+
+      Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+      m_CubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
 
     /**************************************************************************/
@@ -99,12 +101,12 @@ class EMStressPNorm :
       Plato::ScalarMultiVectorT<ResultScalarType> stress("stress", numCells, m_numVoigtTerms);
       Plato::ScalarMultiVectorT<ResultScalarType> edisp ("edisp",  numCells, SpaceDim);
 
-      auto quadratureWeight = m_CubatureRule->getCubWeight();
+      auto quadratureWeight = m_CubatureRule->getCubWeights();
       auto applyWeighting   = m_applyWeighting;
       Kokkos::parallel_for(Kokkos::RangePolicy<>(0,numCells), LAMBDA_EXPRESSION(Plato::OrdinalType cellOrdinal)
       {
         computeGradient(cellOrdinal, gradient, aConfig, cellVolume);
-        cellVolume(cellOrdinal) *= quadratureWeight;
+        cellVolume(cellOrdinal) *= quadratureWeight(cellOrdinal);
 
         // compute strain
         //

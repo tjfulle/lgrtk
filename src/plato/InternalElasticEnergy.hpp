@@ -9,6 +9,7 @@
 #include "plato/LinearStress.hpp"
 #include "plato/LinearElasticMaterial.hpp"
 #include "plato/AbstractScalarFunction.hpp"
+#include "plato/PlatoCubatureFactory.hpp"
 #include "plato/ImplicitFunctors.hpp"
 #include "plato/ExpInstMacros.hpp"
 #include "plato/ToMap.hpp"
@@ -47,10 +48,9 @@ class InternalElasticEnergy :
 
     Omega_h::Matrix< m_numVoigtTerms, m_numVoigtTerms> m_cellStiffness; /*!< matrix with Lame constants for a cell/element */
     
-    Plato::Scalar m_quadratureWeight; /*!< quadrature weight for simplex element */
-
     IndicatorFunctionType m_indicatorFunction; /*!< penalty function */
     Plato::ApplyWeighting<mSpaceDim,m_numVoigtTerms,IndicatorFunctionType> m_applyWeighting; /*!< apply penalty function */
+    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
 
     std::vector<std::string> m_plottable; /*!< database of output field names */
 
@@ -75,16 +75,13 @@ class InternalElasticEnergy :
         auto tMaterialModel = tMaterialModelFactory.create();
         m_cellStiffness = tMaterialModel->getStiffnessMatrix();
 
-        m_quadratureWeight = 1.0; // for a 1-point quadrature rule for simplices
-        for(Plato::OrdinalType tDim = 2; tDim <= mSpaceDim; tDim++)
-        {
-            m_quadratureWeight /= Plato::Scalar(tDim);
-        }
-
         if(aProblemParams.isType < Teuchos::Array < std::string >> ("Plottable"))
         {
             m_plottable = aProblemParams.get < Teuchos::Array < std::string >> ("Plottable").toVector();
         }
+        Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+        mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
+
     }
 
     /******************************************************************************//**
@@ -123,12 +120,12 @@ class InternalElasticEnergy :
       Kokkos::View<ResultScalarType**, Kokkos::LayoutRight, Plato::MemSpace>
         tStress("stress",tNumCells,m_numVoigtTerms);
 
-      auto tQuadratureWeight = m_quadratureWeight;
+      auto tQuadratureWeight = mCubatureRule->getCubWeights();
       auto tApplyWeighting  = m_applyWeighting;
       Kokkos::parallel_for(Kokkos::RangePolicy<int>(0,tNumCells), LAMBDA_EXPRESSION(const int & aCellOrdinal)
       {
         tComputeGradient(aCellOrdinal, tGradient, aConfig, tCellVolume);
-        tCellVolume(aCellOrdinal) *= tQuadratureWeight;
+        tCellVolume(aCellOrdinal) *= tQuadratureWeight(aCellOrdinal);
 
         // compute strain
         //

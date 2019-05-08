@@ -7,6 +7,7 @@
 #include "plato/LinearStress.hpp"
 #include "plato/TensorPNorm.hpp"
 #include "plato/LinearElasticMaterial.hpp"
+#include "plato/PlatoCubatureFactory.hpp"
 #include "plato/ImplicitFunctors.hpp"
 #include "plato/AbstractScalarFunction.hpp"
 #include "plato/ExpInstMacros.hpp"
@@ -41,12 +42,11 @@ class StressPNorm :
 
     Omega_h::Matrix< m_numVoigtTerms, m_numVoigtTerms> m_cellStiffness;
     
-    Plato::Scalar m_quadratureWeight;
-
     IndicatorFunctionType m_indicatorFunction;
     Plato::ApplyWeighting<SpaceDim,m_numVoigtTerms,IndicatorFunctionType> m_applyWeighting;
 
     Teuchos::RCP<TensorNormBase<m_numVoigtTerms,EvaluationType>> m_norm;
+    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
 
   public:
     /**************************************************************************/
@@ -64,16 +64,13 @@ class StressPNorm :
       auto materialModel = mmfactory.create();
       m_cellStiffness = materialModel->getStiffnessMatrix();
 
-      m_quadratureWeight = 1.0; // for a 1-point quadrature rule for simplices
-      for (Plato::OrdinalType d=2; d<=SpaceDim; d++)
-      { 
-        m_quadratureWeight /= Plato::Scalar(d);
-      }
-
       auto params = aProblemParams.get<Teuchos::ParameterList>("Stress P-Norm");
 
       TensorNormFactory<m_numVoigtTerms, EvaluationType> normFactory;
       m_norm = normFactory.create(params);
+
+      Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+      mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
 
     /**************************************************************************/
@@ -106,12 +103,12 @@ class StressPNorm :
       Plato::ScalarMultiVectorT<ResultScalarType>
         stress("stress",numCells,m_numVoigtTerms);
 
-      auto quadratureWeight = m_quadratureWeight;
+      auto quadratureWeight = mCubatureRule->getCubWeights();
       auto applyWeighting  = m_applyWeighting;
       Kokkos::parallel_for(Kokkos::RangePolicy<>(0,numCells), LAMBDA_EXPRESSION(Plato::OrdinalType cellOrdinal)
       {
         computeGradient(cellOrdinal, gradient, aConfig, cellVolume);
-        cellVolume(cellOrdinal) *= quadratureWeight;
+        cellVolume(cellOrdinal) *= quadratureWeight(cellOrdinal);
 
         // compute strain
         //

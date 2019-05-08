@@ -27,7 +27,7 @@
 #include "plato/AbstractVectorFunction.hpp"
 #include "plato/ComplexStressDivergence.hpp"
 #include "plato/SimplexStructuralDynamics.hpp"
-#include "plato/LinearTetCubRuleDegreeOne.hpp"
+#include "plato/PlatoCubatureFactory.hpp"
 #include "plato/StructuralDynamicsCellResidual.hpp"
 
 namespace Plato
@@ -67,8 +67,9 @@ private:
     Omega_h::Matrix<m_numVoigtTerms, m_numVoigtTerms> mCellStiffness;
 
     std::shared_ptr<Plato::BodyLoads<m_numSpatialDims, m_numDofsPerNode>> mBodyLoads;
-    std::shared_ptr<Plato::LinearTetCubRuleDegreeOne<m_numSpatialDims>> mCubatureRule;
     std::shared_ptr<Plato::NaturalBCs<m_numSpatialDims, m_numDofsPerNode>> mBoundaryLoads;
+
+    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
 
 public:
     /******************************************************************************//**
@@ -96,10 +97,12 @@ public:
             mApplyProjection(mProjectionFunction),
             mCellStiffness(),
             mBodyLoads(nullptr),
-            mCubatureRule(std::make_shared<Plato::LinearTetCubRuleDegreeOne<m_numSpatialDims>>()),
             mBoundaryLoads(nullptr)
     {
         this->initialize(aProblemParams);
+
+        Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+        mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
 
     /******************************************************************************//**
@@ -125,10 +128,12 @@ public:
             mApplyProjection(mProjectionFunction),
             mCellStiffness(),
             mBodyLoads(nullptr),
-            mCubatureRule(std::make_shared<Plato::LinearTetCubRuleDegreeOne<m_numSpatialDims>>()),
             mBoundaryLoads(nullptr)
     {
         this->initialize(aProblemParams);
+
+        Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+        mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
 
     /******************************************************************************//**
@@ -152,10 +157,12 @@ public:
             mApplyProjection(mProjectionFunction),
             mCellStiffness(),
             mBodyLoads(nullptr),
-            mCubatureRule(std::make_shared<Plato::LinearTetCubRuleDegreeOne<m_numSpatialDims>>()),
             mBoundaryLoads(nullptr)
     {
         this->initialize();
+
+        Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+        mCubatureRule = tCubatureFactory.create(aMesh);
     }
 
     /******************************************************************************//**
@@ -282,14 +289,14 @@ public:
         // Copy data from host into device
         auto & tApplyPenalty = mApplyPenalty;
         auto & tApplyProjection = mApplyProjection;
-        auto tQuadratureWeight = mCubatureRule->getCubWeight();
+        auto tQuadratureWeight = mCubatureRule->getCubWeights();
         auto tBasisFunctions = mCubatureRule->getBasisFunctions();
         auto tOmegaTimesOmega = aAngularFrequency * aAngularFrequency;
         Kokkos::parallel_for(Kokkos::RangePolicy<>(0, tNumCells), LAMBDA_EXPRESSION(const Plato::OrdinalType & aCellOrdinal)
         {
             // Compute elastic forces
             tComputeGradientWorkset(aCellOrdinal, tCellGradient, aConfiguration, tCellVolume);
-            tCellVolume(aCellOrdinal) *= tQuadratureWeight;
+            tCellVolume(aCellOrdinal) *= tQuadratureWeight(aCellOrdinal);
             tComputeVoigtStrain(aCellOrdinal, aState, tCellGradient, tCellStrain);
             tComputeVoigtStress(aCellOrdinal, tCellStrain, tCellStress);
             tComputeStressDivergence(aCellOrdinal, tCellVolume, tCellGradient, tCellStress, tElasticForces);

@@ -12,7 +12,7 @@
 #include "plato/AbstractVectorFunction.hpp"
 #include "plato/ApplyWeighting.hpp"
 #include "plato/CellForcing.hpp"
-#include "plato/LinearTetCubRuleDegreeOne.hpp"
+#include "plato/PlatoCubatureFactory.hpp"
 #include "plato/Simp.hpp"
 #include "plato/Ramp.hpp"
 #include "plato/Heaviside.hpp"
@@ -63,7 +63,7 @@ private:
     std::shared_ptr<Plato::BodyLoads<mSpaceDim,m_numDofsPerNode>> m_bodyLoads;
     std::shared_ptr<Plato::NaturalBCs<mSpaceDim,m_numDofsPerNode>> m_boundaryLoads;
     std::shared_ptr<Plato::CellForcing<m_numVoigtTerms>> m_cellForcing;
-    std::shared_ptr<Plato::LinearTetCubRuleDegreeOne<EvaluationType::SpatialDim>> mCubatureRule;
+    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
 
     std::vector<std::string> m_plottable;
 
@@ -86,8 +86,7 @@ public:
             m_applyWeighting(m_indicatorFunction),
             m_bodyLoads(nullptr),
             m_boundaryLoads(nullptr),
-            m_cellForcing(nullptr),
-            mCubatureRule(std::make_shared<Plato::LinearTetCubRuleDegreeOne<EvaluationType::SpatialDim>>())
+            m_cellForcing(nullptr)
     {
         // create material model and get stiffness
         //
@@ -122,6 +121,8 @@ public:
         if( tResidualParams.isType<Teuchos::Array<std::string>>("Plottable") )
           m_plottable = tResidualParams.get<Teuchos::Array<std::string>>("Plottable").toVector();
 
+         Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+         mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
 
     /******************************************************************************//**
@@ -162,11 +163,11 @@ public:
       Plato::ScalarMultiVectorT<ResultScalarType>
         tStress("stress",tNumCells,m_numVoigtTerms);
     
-      auto tQuadratureWeight = mCubatureRule->getCubWeight();
+      auto tQuadratureWeights = mCubatureRule->getCubWeights();
       Kokkos::parallel_for(Kokkos::RangePolicy<>(0, tNumCells), LAMBDA_EXPRESSION(const Plato::OrdinalType & aCellOrdinal)
       {
         tComputeGradient(aCellOrdinal, tGradient, aConfig, tCellVolume);
-        tCellVolume(aCellOrdinal) *= tQuadratureWeight;
+        tCellVolume(aCellOrdinal) *= tQuadratureWeights(aCellOrdinal);
 
         // compute strain
         tComputeVoigtStrain(aCellOrdinal, tStrain, aState, tGradient);

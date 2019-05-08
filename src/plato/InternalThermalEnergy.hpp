@@ -10,6 +10,7 @@
 #include "plato/ImplicitFunctors.hpp"
 #include "plato/LinearThermalMaterial.hpp"
 #include "plato/AbstractScalarFunction.hpp"
+#include "plato/PlatoCubatureFactory.hpp"
 #include "plato/AbstractScalarFunctionInc.hpp"
 #include "plato/Simp.hpp"
 #include "plato/Ramp.hpp"
@@ -47,10 +48,10 @@ class InternalThermalEnergy :
 
     Omega_h::Matrix< mSpaceDim, mSpaceDim> m_cellConductivity; /*!< conductivity coefficients */
     
-    Plato::Scalar m_quadratureWeight; /*!< integration rule weight */
-
     IndicatorFunctionType m_indicatorFunction; /*!< penalty function */
     Plato::ApplyWeighting<mSpaceDim,mSpaceDim,IndicatorFunctionType> m_applyWeighting; /*!< applies penalty function */
+    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
+
 
   public:
     /******************************************************************************//**
@@ -73,12 +74,8 @@ class InternalThermalEnergy :
       auto tMaterialModel = tMaterialModelFactory.create();
       m_cellConductivity = tMaterialModel->getConductivityMatrix();
 
-      m_quadratureWeight = 1.0; // for a 1-point quadrature rule for simplices
-      for (Plato::OrdinalType tDim=2; tDim<=mSpaceDim; tDim++)
-      { 
-        m_quadratureWeight /= Plato::Scalar(tDim);
-      }
-    
+      Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+      mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
 
     /******************************************************************************//**
@@ -117,12 +114,12 @@ class InternalThermalEnergy :
       Kokkos::View<ResultScalarType**, Kokkos::LayoutRight, Plato::MemSpace>
         tThermalFlux("thermal flux",tNumCells,mSpaceDim);
 
-      auto tQuadratureWeight = m_quadratureWeight;
+      auto tQuadratureWeight = mCubatureRule->getCubWeights();
       auto tApplyWeighting  = m_applyWeighting;
       Kokkos::parallel_for(Kokkos::RangePolicy<int>(0,tNumCells), LAMBDA_EXPRESSION(const Plato::OrdinalType & aCellOrdinal)
       {
         tComputeGradient(aCellOrdinal, tGradient, aConfig, tCellVolume);
-        tCellVolume(aCellOrdinal) *= tQuadratureWeight;
+        tCellVolume(aCellOrdinal) *= tQuadratureWeight(aCellOrdinal);
 
         // compute temperature gradient
         //
@@ -174,10 +171,9 @@ class InternalThermalEnergyInc :
 
     Omega_h::Matrix< mSpaceDim, mSpaceDim> m_cellConductivity;
     
-    Plato::Scalar m_quadratureWeight;
-
     IndicatorFunctionType m_indicatorFunction;
     ApplyWeighting<mSpaceDim,mSpaceDim,IndicatorFunctionType> m_applyWeighting;
+    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
 
   public:
     /**************************************************************************/
@@ -195,12 +191,8 @@ class InternalThermalEnergyInc :
       auto materialModel = mmfactory.create();
       m_cellConductivity = materialModel->getConductivityMatrix();
 
-      m_quadratureWeight = 1.0; // for a 1-point quadrature rule for simplices
-      for (int d=2; d<=mSpaceDim; d++)
-      { 
-        m_quadratureWeight /= Plato::Scalar(d);
-      }
-    
+      Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+      mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
 
     /**************************************************************************/
@@ -234,12 +226,12 @@ class InternalThermalEnergyInc :
       Kokkos::View<ResultScalarType**, Kokkos::LayoutRight, Plato::MemSpace>
         tflux("thermal flux",numCells,mSpaceDim);
 
-      auto quadratureWeight = m_quadratureWeight;
+      auto quadratureWeight = mCubatureRule->getCubWeights();
       auto applyWeighting  = m_applyWeighting;
       Kokkos::parallel_for(Kokkos::RangePolicy<int>(0,numCells), LAMBDA_EXPRESSION(const int & aCellOrdinal)
       {
         computeGradient(aCellOrdinal, gradient, aConfig, cellVolume);
-        cellVolume(aCellOrdinal) *= quadratureWeight;
+        cellVolume(aCellOrdinal) *= quadratureWeight(aCellOrdinal);
 
         // compute temperature gradient
         //

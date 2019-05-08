@@ -119,14 +119,14 @@ class InternalElectroelasticEnergy :
 
       Plato::ScalarArray3DT<ConfigScalarType>   tGradient("gradient",tNumCells,m_numNodesPerCell,mSpaceDim);
 
-      auto tQuadratureWeight = m_CubatureRule->getCubWeight();
+      auto tQuadratureWeight = m_CubatureRule->getCubWeights();
 
       auto& tApplyStressWeighting = m_applyStressWeighting;
       auto& tApplyEDispWeighting  = m_applyEDispWeighting;
       Kokkos::parallel_for(Kokkos::RangePolicy<int>(0,tNumCells), LAMBDA_EXPRESSION(const int & aCellOrdinal)
       {
         tComputeGradient(aCellOrdinal, tGradient, aConfig, tCellVolume);
-        tCellVolume(aCellOrdinal) *= tQuadratureWeight;
+        tCellVolume(aCellOrdinal) *= tQuadratureWeight(aCellOrdinal);
 
         // compute strain and electric field
         //

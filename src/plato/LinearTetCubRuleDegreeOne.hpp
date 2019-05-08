@@ -10,22 +10,30 @@
 #include <string>
 
 #include "plato/PlatoStaticsTypes.hpp"
+#include "plato/PlatoMathHelpers.hpp"
+#include "plato/CubatureRule.hpp"
 
 namespace Plato
 {
 
 /******************************************************************************/
 template<Plato::OrdinalType SpaceDim>
-class LinearTetCubRuleDegreeOne
+class LinearTetCubRuleDegreeOne : public Plato::CubatureRule<SpaceDim>
 /******************************************************************************/
 {
 public:
     /******************************************************************************/
-    LinearTetCubRuleDegreeOne() :
-            mCubWeight(1.0),
-            mNumCubPoints(1),
-            mBasisFunctions(),
-            mCubPointsCoords()
+    LinearTetCubRuleDegreeOne() : 
+      Plato::CubatureRule<SpaceDim>(),
+      mCubWeight(1.0)
+    /******************************************************************************/
+    {
+        this->initialize();
+    }
+    /******************************************************************************/
+    LinearTetCubRuleDegreeOne(Omega_h::Mesh& aMesh) : 
+      Plato::CubatureRule<SpaceDim>(aMesh),
+      mCubWeight(1.0)
     /******************************************************************************/
     {
         this->initialize();
@@ -40,24 +48,6 @@ public:
     /******************************************************************************/
     {
         return (mCubWeight);
-    }
-    /******************************************************************************/
-    KOKKOS_INLINE_FUNCTION Plato::OrdinalType getNumCubPoints() const
-    /******************************************************************************/
-    {
-        return (mNumCubPoints);
-    }
-    /******************************************************************************/
-    KOKKOS_INLINE_FUNCTION const Plato::ScalarVector & getBasisFunctions() const
-    /******************************************************************************/
-    {
-        return (mBasisFunctions);
-    }
-    /******************************************************************************/
-    KOKKOS_INLINE_FUNCTION const Plato::ScalarVector & getCubPointsCoords() const
-    /******************************************************************************/
-    {
-        return (mCubPointsCoords);
     }
 
 private:
@@ -76,61 +66,10 @@ private:
         { 
             mCubWeight /= Plato::Scalar(tDimIndex);
         }
-
-        // initialize array with cubature points coordinates
-        std::string tName = "Tet4: Degree One Cubature Rule - Coordinates View";
-        mCubPointsCoords = decltype(mCubPointsCoords)(Kokkos::ViewAllocateWithoutInitializing(tName), SpaceDim);
-        auto tHostCubPointsCoords = Kokkos::create_mirror(mCubPointsCoords);
-        if(SpaceDim == static_cast<Plato::OrdinalType>(3))
-        {
-            tHostCubPointsCoords(0) = static_cast<Plato::Scalar>(0.25);
-            tHostCubPointsCoords(1) = static_cast<Plato::Scalar>(0.25);
-            tHostCubPointsCoords(2) = static_cast<Plato::Scalar>(0.25);
-        }
-        else if(SpaceDim == static_cast<Plato::OrdinalType>(2))
-        {
-            tHostCubPointsCoords(0) = static_cast<Plato::Scalar>(1.0/3.0);
-            tHostCubPointsCoords(1) = static_cast<Plato::Scalar>(1.0/3.0);
-        }
-        else
-        {
-            tHostCubPointsCoords(0) = static_cast<Plato::Scalar>(1.0/2.0);
-        }
-
-        // initialize array with basis functions
-        tName = "Tet4: Degree One Cubature Rule - Basis Functions View";
-        auto tNumNodesPerCell = SpaceDim + static_cast<Plato::OrdinalType>(1);
-        mBasisFunctions = decltype(mBasisFunctions)(Kokkos::ViewAllocateWithoutInitializing(tName), tNumNodesPerCell);
-        auto tHostBasisFunctions = Kokkos::create_mirror(mBasisFunctions);
-        if(SpaceDim == static_cast<Plato::OrdinalType>(3))
-        {
-            tHostBasisFunctions(0) = static_cast<Plato::Scalar>(1) - tHostCubPointsCoords(0)
-                    - tHostCubPointsCoords(1) - tHostCubPointsCoords(2);
-            tHostBasisFunctions(1) = tHostCubPointsCoords(0);
-            tHostBasisFunctions(2) = tHostCubPointsCoords(1);
-            tHostBasisFunctions(3) = tHostCubPointsCoords(2);
-        }
-        else if(SpaceDim == static_cast<Plato::OrdinalType>(2))
-        {
-            tHostBasisFunctions(0) = static_cast<Plato::Scalar>(1) - tHostCubPointsCoords(0) - tHostCubPointsCoords(1);
-            tHostBasisFunctions(1) = tHostCubPointsCoords(0);
-            tHostBasisFunctions(2) = tHostCubPointsCoords(1);
-        }
-        else
-        {
-            tHostBasisFunctions(0) = static_cast<Plato::Scalar>(1) - tHostCubPointsCoords(0);
-            tHostBasisFunctions(1) = tHostCubPointsCoords(0);
-        }
-
-        Kokkos::deep_copy(mBasisFunctions, tHostBasisFunctions);
-        Kokkos::deep_copy(mCubPointsCoords, tHostCubPointsCoords);
+        Plato::fill(mCubWeight, this->mCubWeights);
     }
 
-private:
     Plato::Scalar mCubWeight;
-    Plato::OrdinalType mNumCubPoints;
-    Plato::ScalarVector mBasisFunctions;
-    Plato::ScalarVector mCubPointsCoords;
 };
 // class LinearTetCubRuleDegreeOne
 

@@ -15,7 +15,7 @@
 
 #include "plato/ApplyProjection.hpp"
 #include "plato/AbstractScalarFunction.hpp"
-#include "plato/LinearTetCubRuleDegreeOne.hpp"
+#include "plato/PlatoCubatureFactory.hpp"
 #include "plato/SimplexStructuralDynamics.hpp"
 
 namespace Plato
@@ -39,7 +39,8 @@ private:
     ProjectionFuncType mProjectionFunction;
     Plato::ApplyProjection<ProjectionFuncType> mApplyProjection;
 
-    std::shared_ptr<Plato::LinearTetCubRuleDegreeOne<EvaluationType::SpatialDim>> mCubatureRule;
+    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
+
 
 public:
     /**************************************************************************/
@@ -50,10 +51,11 @@ public:
             Plato::AbstractScalarFunction<EvaluationType>(aMesh, aMeshSets, aDataMap, "Experimental Volume"),
             mProjectionFunction(),
             mPenaltyFunction(aPenaltyParams),
-            mApplyProjection(mProjectionFunction),
-            mCubatureRule(std::make_shared<Plato::LinearTetCubRuleDegreeOne<EvaluationType::SpatialDim>>())
+            mApplyProjection(mProjectionFunction)
     /**************************************************************************/
     {
+         Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+         mCubatureRule = tCubatureFactory.create(aMesh);
     }
 
     /**************************************************************************/
@@ -63,10 +65,11 @@ public:
             Plato::AbstractScalarFunction<EvaluationType>(aMesh, aMeshSets, aDataMap, "Experimental Volume"),
             mProjectionFunction(),
             mPenaltyFunction(3.0, 0.0),
-            mApplyProjection(mProjectionFunction),
-            mCubatureRule(std::make_shared<Plato::LinearTetCubRuleDegreeOne<EvaluationType::SpatialDim>>())
+            mApplyProjection(mProjectionFunction)
     /**************************************************************************/
     {
+         Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+         mCubatureRule = tCubatureFactory.create(aMesh);
     }
 
     /**************************************************************************/
@@ -88,12 +91,12 @@ public:
         auto tNumCells = aControl.extent(0);
         auto & tApplyProjection = mApplyProjection;
         auto & tPenaltyFunction = mPenaltyFunction;
-        auto tQuadratureWeight = mCubatureRule->getCubWeight();
+        auto tQuadratureWeight = mCubatureRule->getCubWeights();
         Kokkos::parallel_for(Kokkos::RangePolicy<>(0, tNumCells), LAMBDA_EXPRESSION(const Plato::OrdinalType & aCellOrdinal)
         {
             ConfigScalarType tCellVolume;
             tComputeCellVolume(aCellOrdinal, aConfig, tCellVolume);
-            tCellVolume *= tQuadratureWeight;
+            tCellVolume *= tQuadratureWeight(aCellOrdinal);
             aResult(aCellOrdinal) = tCellVolume;
 
             ControlScalarType tCellDensity = tApplyProjection(aCellOrdinal, aControl);

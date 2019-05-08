@@ -50,6 +50,7 @@ SET(PLATO_SOURCES
   plato/HeatEquationResidual.cpp
   plato/TransientThermomechResidual.cpp
   plato/InternalThermalEnergy.cpp
+  plato/CogentCubature.cpp
   plato/InternalThermoelasticEnergy.cpp
   plato/InternalElectroelasticEnergy.cpp
   plato/InternalElasticEnergy.cpp
@@ -84,6 +85,11 @@ set(SOURCES ${SOURCES} ${LGRV1_SOURCES})
 endif()
 
 add_library( lgrtk ${SOURCES})
+
+if (LGR_ENABLE_PLATO_GEOMETRY AND LGR_ENABLE_PLATO_MPMD)
+target_include_directories(lgrtk PRIVATE "${PLATO_PREFIX}/include")
+endif()
+
 if( CMAKE_INSTALL_PREFIX )
   install( TARGETS lgrtk DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
 endif()

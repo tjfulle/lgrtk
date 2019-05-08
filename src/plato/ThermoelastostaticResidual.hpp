@@ -14,7 +14,7 @@
 #include "plato/ApplyWeighting.hpp"
 #include "plato/CellForcing.hpp"
 #include "plato/InterpolateFromNodal.hpp"
-#include "plato/LinearTetCubRuleDegreeOne.hpp"
+#include "plato/PlatoCubatureFactory.hpp"
 #include "plato/LinearThermoelasticMaterial.hpp"
 #include "plato/NaturalBCs.hpp"
 #include "plato/BodyLoads.hpp"
@@ -61,7 +61,7 @@ private:
     std::shared_ptr<Plato::NaturalBCs<SpaceDim, NMechDims, m_numDofsPerNode, MDofOffset>> m_boundaryLoads;
     std::shared_ptr<Plato::NaturalBCs<SpaceDim, NThrmDims, m_numDofsPerNode, TDofOffset>> m_boundaryFluxes;
 
-    std::shared_ptr<Plato::LinearTetCubRuleDegreeOne<EvaluationType::SpatialDim>> mCubatureRule;
+    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
 
     Teuchos::RCP<Plato::LinearThermoelasticMaterial<SpaceDim>> m_materialModel;
 
@@ -80,8 +80,7 @@ public:
             m_applyFluxWeighting(m_indicatorFunction),
             m_bodyLoads(nullptr),
             m_boundaryLoads(nullptr),
-            m_boundaryFluxes(nullptr),
-            mCubatureRule(std::make_shared<Plato::LinearTetCubRuleDegreeOne<EvaluationType::SpatialDim>>())
+            m_boundaryFluxes(nullptr)
     /**************************************************************************/
     {
         // create material model and get stiffness
@@ -114,6 +113,9 @@ public:
         auto tResidualParams = aProblemParams.sublist("Thermoelastostatics");
         if( tResidualParams.isType<Teuchos::Array<std::string>>("Plottable") )
           m_plottable = tResidualParams.get<Teuchos::Array<std::string>>("Plottable").toVector();
+
+        Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+        mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
 
     }
 
@@ -151,13 +153,13 @@ public:
     
       Plato::ScalarVectorT<StateScalarType> temperature("Gauss point temperature", tNumCells);
 
-      auto quadratureWeight = mCubatureRule->getCubWeight();
+      auto quadratureWeight = mCubatureRule->getCubWeights();
       auto basisFunctions = mCubatureRule->getBasisFunctions();
 
       Kokkos::parallel_for(Kokkos::RangePolicy<int>(0,tNumCells), LAMBDA_EXPRESSION(int cellOrdinal)
       {
         computeGradient(cellOrdinal, gradient, config, cellVolume);
-        cellVolume(cellOrdinal) *= quadratureWeight;
+        cellVolume(cellOrdinal) *= quadratureWeight(cellOrdinal);
 
         // compute strain and electric field
         //

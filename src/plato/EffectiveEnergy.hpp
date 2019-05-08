@@ -10,6 +10,7 @@
 #include "plato/ImplicitFunctors.hpp"
 #include "plato/HomogenizedStress.hpp"
 #include "plato/AbstractScalarFunction.hpp"
+#include "plato/PlatoCubatureFactory.hpp"
 #include "plato/ExpInstMacros.hpp"
 #include "plato/Simp.hpp"
 #include "plato/Ramp.hpp"
@@ -47,11 +48,11 @@ class EffectiveEnergy :
 
     IndicatorFunctionType m_indicatorFunction;
     Plato::ApplyWeighting<mSpaceDim,m_numVoigtTerms,IndicatorFunctionType> m_applyWeighting;
+    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
 
     Omega_h::Matrix< m_numVoigtTerms, m_numVoigtTerms> m_cellStiffness;
     Omega_h::Vector<m_numVoigtTerms> m_assumedStrain;
     Plato::OrdinalType m_columnIndex;
-    Plato::Scalar m_quadratureWeight;
 
   public:
     /**************************************************************************/
@@ -87,13 +88,8 @@ class EffectiveEnergy :
       {
           // JR TODO: throw
       }
-
-      m_quadratureWeight = 1.0; // for a 1-point quadrature rule for simplices
-      for (Plato::OrdinalType d=2; d<=mSpaceDim; d++)
-      { 
-          m_quadratureWeight /= Plato::Scalar(d);
-      }
-    
+      Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+      mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
 
     /**************************************************************************/
@@ -126,13 +122,13 @@ class EffectiveEnergy :
       Kokkos::View<ResultScalarType**, Kokkos::LayoutRight, Plato::MemSpace>
         stress("stress",numCells,m_numVoigtTerms);
 
-      auto quadratureWeight = m_quadratureWeight;
+      auto quadratureWeight = mCubatureRule->getCubWeights();
       auto applyWeighting   = m_applyWeighting;
       auto assumedStrain    = m_assumedStrain;
       Kokkos::parallel_for(Kokkos::RangePolicy<>(0,numCells), LAMBDA_EXPRESSION(const Plato::OrdinalType & aCellOrdinal)
       {
         computeGradient(aCellOrdinal, gradient, aConfig, cellVolume);
-        cellVolume(aCellOrdinal) *= quadratureWeight;
+        cellVolume(aCellOrdinal) *= quadratureWeight(aCellOrdinal);
 
         // compute strain
         //

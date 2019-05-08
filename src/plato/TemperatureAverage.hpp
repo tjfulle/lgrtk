@@ -8,7 +8,7 @@
 #include "plato/ImplicitFunctors.hpp"
 #include "plato/SimplexFadTypes.hpp"
 #include "plato/AbstractScalarFunctionInc.hpp"
-#include "plato/LinearTetCubRuleDegreeOne.hpp"
+#include "plato/PlatoCubatureFactory.hpp"
 
 #include "plato/Simp.hpp"
 #include "plato/Ramp.hpp"
@@ -41,7 +41,7 @@ class TemperatureAverageInc :
     using ConfigScalarType    = typename EvaluationType::ConfigScalarType;
     using ResultScalarType    = typename EvaluationType::ResultScalarType;
 
-    std::shared_ptr<Plato::LinearTetCubRuleDegreeOne<SpaceDim>> m_cubatureRule;
+    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> m_cubatureRule;
 
     IndicatorFunctionType m_indicatorFunction;
     Plato::ApplyWeighting<SpaceDim,m_numDofsPerNode,IndicatorFunctionType> m_applyWeighting;
@@ -54,10 +54,13 @@ class TemperatureAverageInc :
                         Teuchos::ParameterList& aProblemParams,
                         Teuchos::ParameterList& aPenaltyParams) :
             Plato::AbstractScalarFunctionInc<EvaluationType>(aMesh, aMeshSets, aDataMap, "Temperature Average"),
-            m_cubatureRule(std::make_shared<Plato::LinearTetCubRuleDegreeOne<SpaceDim>>()),
             m_indicatorFunction(aPenaltyParams),
-            m_applyWeighting(m_indicatorFunction) {}
+            m_applyWeighting(m_indicatorFunction)
     /**************************************************************************/
+    {
+         Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+         m_cubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
+    }
 
     /**************************************************************************/
     void evaluate(const Plato::ScalarMultiVectorT<StateScalarType> & aState,
@@ -80,7 +83,6 @@ class TemperatureAverageInc :
       Plato::ScalarMultiVectorT<TScalarType>  tWeightedStateValues("weighted temperature at GPs", numCells, m_numDofsPerNode);
 
       auto basisFunctions = m_cubatureRule->getBasisFunctions();
-      auto quadratureWeight = m_cubatureRule->getCubWeight();
       auto applyWeighting  = m_applyWeighting;
       Kokkos::parallel_for(Kokkos::RangePolicy<int>(0,numCells), LAMBDA_EXPRESSION(const int & aCellOrdinal)
       {

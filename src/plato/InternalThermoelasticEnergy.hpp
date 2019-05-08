@@ -11,8 +11,8 @@
 #include "plato/InterpolateFromNodal.hpp"
 #include "plato/AbstractScalarFunction.hpp"
 #include "plato/AbstractScalarFunctionInc.hpp"
-#include "plato/LinearTetCubRuleDegreeOne.hpp"
 #include "plato/LinearThermoelasticMaterial.hpp"
+#include "plato/PlatoCubatureFactory.hpp"
 #include "plato/ToMap.hpp"
 #include "plato/ExpInstMacros.hpp"
 #include "plato/Simp.hpp"
@@ -57,7 +57,7 @@ class InternalThermoelasticEnergy :
     Plato::ApplyWeighting<mSpaceDim, m_numVoigtTerms, IndicatorFunctionType> m_applyStressWeighting;
     Plato::ApplyWeighting<mSpaceDim, mSpaceDim,        IndicatorFunctionType> m_applyFluxWeighting;
 
-    std::shared_ptr<Plato::LinearTetCubRuleDegreeOne<EvaluationType::SpatialDim>> m_CubatureRule;
+    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> m_CubatureRule;
 
     std::vector<std::string> m_plottable;
 
@@ -71,8 +71,7 @@ class InternalThermoelasticEnergy :
             Plato::AbstractScalarFunction<EvaluationType>(aMesh, aMeshSets, aDataMap, "Internal Thermoelastic Energy"),
             m_indicatorFunction(aPenaltyParams),
             m_applyStressWeighting(m_indicatorFunction),
-            m_applyFluxWeighting(m_indicatorFunction),
-            m_CubatureRule(std::make_shared<Plato::LinearTetCubRuleDegreeOne<EvaluationType::SpatialDim>>())
+            m_applyFluxWeighting(m_indicatorFunction)
     /**************************************************************************/
     {
       Plato::ThermoelasticModelFactory<mSpaceDim> mmfactory(aProblemParams);
@@ -80,6 +79,9 @@ class InternalThermoelasticEnergy :
 
       if( aProblemParams.isType<Teuchos::Array<std::string>>("Plottable") )
         m_plottable = aProblemParams.get<Teuchos::Array<std::string>>("Plottable").toVector();
+
+       Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+       m_CubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
 
     /**************************************************************************/
@@ -116,7 +118,7 @@ class InternalThermoelasticEnergy :
 
       Plato::ScalarVectorT<StateScalarType> temperature("Gauss point temperature", tNumCells);
 
-      auto quadratureWeight = m_CubatureRule->getCubWeight();
+      auto quadratureWeight = m_CubatureRule->getCubWeights();
       auto basisFunctions   = m_CubatureRule->getBasisFunctions();
 
       auto& applyStressWeighting = m_applyStressWeighting;
@@ -124,7 +126,7 @@ class InternalThermoelasticEnergy :
       Kokkos::parallel_for(Kokkos::RangePolicy<>(0, tNumCells), LAMBDA_EXPRESSION(const Plato::OrdinalType & aCellOrdinal)
       {
         computeGradient(aCellOrdinal, gradient, aConfig, cellVolume);
-        cellVolume(aCellOrdinal) *= quadratureWeight;
+        cellVolume(aCellOrdinal) *= quadratureWeight(aCellOrdinal);
 
         // compute strain and temperature gradient
         //
@@ -176,13 +178,11 @@ class InternalThermoelasticEnergyInc :
 
     Teuchos::RCP<Plato::LinearThermoelasticMaterial<SpaceDim>> m_materialModel;
 
-    Plato::Scalar m_quadratureWeight;
-
     IndicatorFunctionType m_indicatorFunction;
     ApplyWeighting<SpaceDim, m_numVoigtTerms, IndicatorFunctionType> m_applyStressWeighting;
     ApplyWeighting<SpaceDim, SpaceDim,        IndicatorFunctionType> m_applyFluxWeighting;
 
-    std::shared_ptr<Plato::LinearTetCubRuleDegreeOne<EvaluationType::SpatialDim>> m_CubatureRule;
+    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> m_CubatureRule;
 
     std::vector<std::string> m_plottable;
 
@@ -196,8 +196,7 @@ class InternalThermoelasticEnergyInc :
             AbstractScalarFunctionInc<EvaluationType>(aMesh, aMeshSets, aDataMap, "Internal Thermoelastic Energy"),
             m_indicatorFunction(aPenaltyParams),
             m_applyStressWeighting(m_indicatorFunction),
-            m_applyFluxWeighting(m_indicatorFunction),
-            m_CubatureRule(std::make_shared<Plato::LinearTetCubRuleDegreeOne<EvaluationType::SpatialDim>>())
+            m_applyFluxWeighting(m_indicatorFunction)
     /**************************************************************************/
     {
       Plato::ThermoelasticModelFactory<SpaceDim> mmfactory(aProblemParams);
@@ -205,6 +204,10 @@ class InternalThermoelasticEnergyInc :
 
       if( aProblemParams.isType<Teuchos::Array<std::string>>("Plottable") )
         m_plottable = aProblemParams.get<Teuchos::Array<std::string>>("Plottable").toVector();
+
+       Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+       m_CubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
+
     }
 
     /**************************************************************************/
@@ -242,7 +245,7 @@ class InternalThermoelasticEnergyInc :
 
       Plato::ScalarVectorT<StateScalarType> temperature("Gauss point temperature", numCells);
 
-      auto quadratureWeight = m_CubatureRule->getCubWeight();
+      auto quadratureWeight = m_CubatureRule->getCubWeights();
       auto basisFunctions   = m_CubatureRule->getBasisFunctions();
 
       auto& applyStressWeighting = m_applyStressWeighting;
@@ -250,7 +253,7 @@ class InternalThermoelasticEnergyInc :
       Kokkos::parallel_for(Kokkos::RangePolicy<int>(0,numCells), LAMBDA_EXPRESSION(const int & aCellOrdinal)
       {
         computeGradient(aCellOrdinal, gradient, aConfig, cellVolume);
-        cellVolume(aCellOrdinal) *= quadratureWeight;
+        cellVolume(aCellOrdinal) *= quadratureWeight(aCellOrdinal);
 
         // compute strain and temperature gradient
         //

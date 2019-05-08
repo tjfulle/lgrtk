@@ -9,6 +9,7 @@
 #include "plato/SimplexFadTypes.hpp"
 #include "plato/AbstractScalarFunction.hpp"
 #include "plato/LinearThermalMaterial.hpp"
+#include "plato/PlatoCubatureFactory.hpp"
 #include "plato/ImplicitFunctors.hpp"
 #include "plato/Simp.hpp"
 #include "plato/Ramp.hpp"
@@ -42,10 +43,9 @@ class FluxPNorm :
 
     Omega_h::Matrix< SpaceDim, SpaceDim> m_cellConductivity;
     
-    Plato::Scalar m_quadratureWeight;
-
     IndicatorFunctionType m_indicatorFunction;
     Plato::ApplyWeighting<SpaceDim,SpaceDim,IndicatorFunctionType> m_applyWeighting;
+    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
 
     Plato::OrdinalType m_exponent;
 
@@ -65,15 +65,12 @@ class FluxPNorm :
       auto materialModel = mmfactory.create();
       m_cellConductivity = materialModel->getConductivityMatrix();
 
-      m_quadratureWeight = 1.0; // for a 1-point quadrature rule for simplices
-      for (int d=2; d<=SpaceDim; d++)
-      { 
-        m_quadratureWeight /= Plato::Scalar(d);
-      }
-
       auto params = aProblemParams.get<Teuchos::ParameterList>("Flux P-Norm");
 
       m_exponent = params.get<double>("Exponent");
+
+      Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+      mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
 
     /**************************************************************************/
@@ -106,13 +103,13 @@ class FluxPNorm :
       Kokkos::View<ResultScalarType**, Kokkos::LayoutRight, Plato::MemSpace>
         tflux("thermal flux",numCells,SpaceDim);
 
-      auto quadratureWeight = m_quadratureWeight;
+      auto quadratureWeight = mCubatureRule->getCubWeights();
       auto& applyWeighting  = m_applyWeighting;
       auto exponent         = m_exponent;
       Kokkos::parallel_for(Kokkos::RangePolicy<int>(0,numCells), LAMBDA_EXPRESSION(const int & aCellOrdinal)
       {
         computeGradient(aCellOrdinal, gradient, aConfig, cellVolume);
-        cellVolume(aCellOrdinal) *= quadratureWeight;
+        cellVolume(aCellOrdinal) *= quadratureWeight(aCellOrdinal);
 
         // compute temperature gradient
         //
