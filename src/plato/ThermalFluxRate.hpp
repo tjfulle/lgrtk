@@ -51,7 +51,8 @@ class ThermalFluxRate :
     {
       if(problemParams.isSublist("Natural Boundary Conditions"))
       {
-          m_boundaryLoads = std::make_shared<Plato::NaturalBCs<SpaceDim,m_numDofsPerNode>>(problemParams.sublist("Natural Boundary Conditions"));
+          m_boundaryLoads = std::make_shared<Plato::NaturalBCs<SpaceDim,m_numDofsPerNode>>
+            (aMesh, problemParams.sublist("Natural Boundary Conditions"));
       }
     }
 
@@ -74,8 +75,8 @@ class ThermalFluxRate :
         Plato::ScalarMultiVectorT<ResultScalarType> boundaryLoads("boundary loads", numCells, m_numDofsPerCell);
         Kokkos::deep_copy(boundaryLoads, 0.0);
 
-        m_boundaryLoads->get( &mMesh, mMeshSets, aState, aControl, boundaryLoads, 1.0/aTimeStep );
-        m_boundaryLoads->get( &mMesh, mMeshSets, aPrevState, aControl, boundaryLoads, 1.0/aTimeStep );
+        m_boundaryLoads->get( mMeshSets, aState, aControl, boundaryLoads, 1.0/aTimeStep );
+        m_boundaryLoads->get( mMeshSets, aPrevState, aControl, boundaryLoads, 1.0/aTimeStep );
 
         Kokkos::parallel_for(Kokkos::RangePolicy<>(0,numCells), LAMBDA_EXPRESSION(const int & cellOrdinal)
         {

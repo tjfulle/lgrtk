@@ -99,7 +99,7 @@ public:
             mBodyLoads(nullptr),
             mBoundaryLoads(nullptr)
     {
-        this->initialize(aProblemParams);
+        this->initialize(aMesh, aProblemParams);
 
         Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
         mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
@@ -130,7 +130,7 @@ public:
             mBodyLoads(nullptr),
             mBoundaryLoads(nullptr)
     {
-        this->initialize(aProblemParams);
+        this->initialize(aMesh, aProblemParams);
 
         Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
         mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
@@ -327,7 +327,7 @@ public:
         {
             auto tMesh = AbstractVectorFunction<EvaluationType>::getMesh();
             auto tMeshSets = AbstractVectorFunction<EvaluationType>::getMeshSets();
-            mBoundaryLoads->get(&tMesh, tMeshSets, aState, aControl, aResidual);
+            mBoundaryLoads->get(tMeshSets, aState, aControl, aResidual);
         }
     }
 
@@ -411,7 +411,7 @@ private:
      * @param [in] aParamList parameter list with input data
      *
     ******************************************************************************/
-    void initialize(Teuchos::ParameterList & aParamList)
+    void initialize(Omega_h::Mesh& aMesh, Teuchos::ParameterList & aParamList)
     {
         // Parse material density
         this->isMaterialModelSublistDefined(aParamList);
@@ -438,7 +438,8 @@ private:
         // Parse Neumann loads
         if(aParamList.isSublist("Natural Boundary Conditions"))
         {
-            mBoundaryLoads = std::make_shared<Plato::NaturalBCs<m_numSpatialDims, m_numDofsPerNode>>(aParamList.sublist("Natural Boundary Conditions"));
+            mBoundaryLoads = std::make_shared<Plato::NaturalBCs<m_numSpatialDims, m_numDofsPerNode>>
+             (aMesh, aParamList.sublist("Natural Boundary Conditions"));
         }
     }
 };

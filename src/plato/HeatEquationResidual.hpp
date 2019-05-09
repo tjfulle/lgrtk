@@ -92,7 +92,8 @@ class HeatEquationResidual :
       // 
       if(aProblemParams.isSublist("Natural Boundary Conditions"))
       {
-          m_boundaryLoads = std::make_shared<Plato::NaturalBCs<SpaceDim,m_numDofsPerNode>>(aProblemParams.sublist("Natural Boundary Conditions"));
+          m_boundaryLoads = std::make_shared<Plato::NaturalBCs<SpaceDim,m_numDofsPerNode>>
+            (aMesh, aProblemParams.sublist("Natural Boundary Conditions"));
       }
 
        Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
@@ -205,8 +206,8 @@ class HeatEquationResidual :
 
       if( m_boundaryLoads != nullptr )
       {
-          m_boundaryLoads->get( &mMesh, mMeshSets, aState, aControl, aResult, -aTimeStep/2.0 );
-          m_boundaryLoads->get( &mMesh, mMeshSets, aPrevState, aControl, aResult, -aTimeStep/2.0 );
+          m_boundaryLoads->get( mMeshSets, aState, aControl, aResult, -aTimeStep/2.0 );
+          m_boundaryLoads->get( mMeshSets, aPrevState, aControl, aResult, -aTimeStep/2.0 );
       }
     }
 };

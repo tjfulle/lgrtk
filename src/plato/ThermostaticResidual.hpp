@@ -78,7 +78,8 @@ class ThermostaticResidual :
       // 
       if(aProblemParams.isSublist("Natural Boundary Conditions"))
       {
-          m_boundaryLoads = std::make_shared<Plato::NaturalBCs<SpaceDim,m_numDofsPerNode>>(aProblemParams.sublist("Natural Boundary Conditions"));
+          m_boundaryLoads = std::make_shared<Plato::NaturalBCs<SpaceDim,m_numDofsPerNode>>
+            (aMesh, aProblemParams.sublist("Natural Boundary Conditions"));
       }
     
        Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
@@ -150,7 +151,7 @@ class ThermostaticResidual :
 
       if( m_boundaryLoads != nullptr )
       {
-          m_boundaryLoads->get( &mMesh, mMeshSets, state, control, result );
+          m_boundaryLoads->get( mMeshSets, state, control, result );
       }
     }
 };

@@ -100,14 +100,16 @@ public:
         // 
         if(aProblemParams.isSublist("Mechanical Natural Boundary Conditions"))
         {
-            m_boundaryLoads =   std::make_shared<Plato::NaturalBCs<SpaceDim, NMechDims, m_numDofsPerNode, MDofOffset>>(aProblemParams.sublist("Mechanical Natural Boundary Conditions"));
+            m_boundaryLoads = std::make_shared<Plato::NaturalBCs<SpaceDim, NMechDims, m_numDofsPerNode, MDofOffset>>
+              (aMesh, aProblemParams.sublist("Mechanical Natural Boundary Conditions"));
         }
   
         // parse thermal boundary Conditions
         // 
         if(aProblemParams.isSublist("Thermal Natural Boundary Conditions"))
         {
-            m_boundaryFluxes = std::make_shared<Plato::NaturalBCs<SpaceDim, NThrmDims, m_numDofsPerNode, TDofOffset>>(aProblemParams.sublist("Thermal Natural Boundary Conditions"));
+            m_boundaryFluxes = std::make_shared<Plato::NaturalBCs<SpaceDim, NThrmDims, m_numDofsPerNode, TDofOffset>>
+              (aMesh, aProblemParams.sublist("Thermal Natural Boundary Conditions"));
         }
   
         auto tResidualParams = aProblemParams.sublist("Thermoelastostatics");
@@ -194,12 +196,12 @@ public:
 
       if( m_boundaryLoads != nullptr )
       {
-          m_boundaryLoads->get( &mMesh, mMeshSets, state, control, result );
+          m_boundaryLoads->get( mMeshSets, state, control, result );
       }
 
       if( m_boundaryFluxes != nullptr )
       {
-          m_boundaryFluxes->get( &mMesh, mMeshSets, state, control, result );
+          m_boundaryFluxes->get( mMeshSets, state, control, result );
       }
 
       if( std::count(m_plottable.begin(),m_plottable.end(),"strain") ) toMap(m_dataMap, strain, "strain");

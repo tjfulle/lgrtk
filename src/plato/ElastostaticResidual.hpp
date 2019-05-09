@@ -106,7 +106,8 @@ public:
         // 
         if(aProblemParams.isSublist("Natural Boundary Conditions"))
         {
-            m_boundaryLoads = std::make_shared<Plato::NaturalBCs<mSpaceDim,m_numDofsPerNode>>(aProblemParams.sublist("Natural Boundary Conditions"));
+            m_boundaryLoads = std::make_shared<Plato::NaturalBCs<mSpaceDim,m_numDofsPerNode>>
+              (aMesh, aProblemParams.sublist("Natural Boundary Conditions"));
         }
   
         // parse cell problem forcing
@@ -198,7 +199,7 @@ public:
 
       if( m_boundaryLoads != nullptr )
       {
-          m_boundaryLoads->get( &mMesh, mMeshSets, aState, aControl, aResult );
+          m_boundaryLoads->get( mMeshSets, aState, aControl, aResult );
       }
 
       if( std::count(m_plottable.begin(),m_plottable.end(),"strain") ) toMap(m_dataMap, tStrain, "strain");

@@ -100,13 +100,15 @@ class TransientThermomechResidual :
       // 
       if(aProblemParams.isSublist("Mechanical Natural Boundary Conditions"))
       {
-          m_boundaryLoads = std::make_shared<Plato::NaturalBCs<SpaceDim, NMechDims, m_numDofsPerNode, MDofOffset>>(aProblemParams.sublist("Mechanical Natural Boundary Conditions"));
+          m_boundaryLoads = std::make_shared<Plato::NaturalBCs<SpaceDim, NMechDims, m_numDofsPerNode, MDofOffset>>
+            (aMesh, aProblemParams.sublist("Mechanical Natural Boundary Conditions"));
       }
       // parse thermal boundary Conditions
       // 
       if(aProblemParams.isSublist("Thermal Natural Boundary Conditions"))
       {
-          m_boundaryFluxes = std::make_shared<Plato::NaturalBCs<SpaceDim, NThrmDims, m_numDofsPerNode, TDofOffset>>(aProblemParams.sublist("Thermal Natural Boundary Conditions"));
+          m_boundaryFluxes = std::make_shared<Plato::NaturalBCs<SpaceDim, NThrmDims, m_numDofsPerNode, TDofOffset>>
+            (aMesh, aProblemParams.sublist("Thermal Natural Boundary Conditions"));
       }
       Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
       m_cubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
@@ -228,13 +230,13 @@ class TransientThermomechResidual :
 
       if( m_boundaryLoads != nullptr )
       {
-          m_boundaryLoads->get( &mMesh, mMeshSets, aState,     aControl, aResult, -aTimeStep/2.0 );
-          m_boundaryLoads->get( &mMesh, mMeshSets, aPrevState, aControl, aResult, -aTimeStep/2.0 );
+          m_boundaryLoads->get( mMeshSets, aState,     aControl, aResult, -aTimeStep/2.0 );
+          m_boundaryLoads->get( mMeshSets, aPrevState, aControl, aResult, -aTimeStep/2.0 );
       }
       if( m_boundaryFluxes != nullptr )
       {
-          m_boundaryFluxes->get( &mMesh, mMeshSets, aState,     aControl, aResult, -aTimeStep/2.0 );
-          m_boundaryFluxes->get( &mMesh, mMeshSets, aPrevState, aControl, aResult, -aTimeStep/2.0 );
+          m_boundaryFluxes->get( mMeshSets, aState,     aControl, aResult, -aTimeStep/2.0 );
+          m_boundaryFluxes->get( mMeshSets, aPrevState, aControl, aResult, -aTimeStep/2.0 );
       }
     }
 };

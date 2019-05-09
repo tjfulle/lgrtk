@@ -4,6 +4,7 @@
 #include "ImplicitFunctors.hpp"
 
 #include "plato/PlatoStaticsTypes.hpp"
+#include "plato/CogentCubature.hpp"
 
 #include <Omega_h_assoc.hpp>
 #include <Teuchos_ParameterList.hpp>
@@ -12,28 +13,89 @@ namespace Plato {
 
   /******************************************************************************/
   /*!
-    \brief Class for natural boundary conditions.
+    \brief Class for conformal natural boundary conditions.
   */
     template<int SpatialDim, int NumDofs=SpatialDim, int DofsPerNode=NumDofs, int DofOffset=0>
-    class NaturalBC
+    class NaturalBCBase
   /******************************************************************************/
   {
-    const std::string    name;
-    const std::string ss_name;
-    Omega_h::Vector<NumDofs> m_flux;
+      protected:
+          const std::string        mName;
+          const std::string        mSidesetName;
+          Omega_h::Vector<NumDofs> mFlux;
+
+    public:
+
+    decltype(mSidesetName) const& get_ss_name() const { return mSidesetName; }
+
+    decltype(mFlux) get_value() const { return mFlux; }
+
+
+    NaturalBCBase(const std::string& name, Teuchos::ParameterList &params) :
+    mName(name),
+    mSidesetName(params.get<std::string>("Sides"))
+    {
+        const std::string type = params.get<std::string>("Type");
+        if ("Uniform" == type) 
+        {
+            bool tValues = params.isType<Teuchos::Array<double>>("Values");
+            bool tValue  = params.isType<double>("Value");
+            if ( tValues && tValue )
+            {
+                TEUCHOS_TEST_FOR_EXCEPTION(true, 
+                   std::logic_error,
+                   " Natural Boundary Condition: provide EITHER 'Values' OR 'Value' Parameter.");
+            } else 
+            if ( tValues )
+            {
+                auto values = params.get<Teuchos::Array<double>>("Values");
+                for(int i=0; i<NumDofs; i++) mFlux(i) = values[i];
+            } else 
+            if ( tValue )
+            {
+                Teuchos::Array<double> fluxVector(NumDofs, 0.0);
+                mFlux(0) = params.get<double>("Value");
+            } else {
+                TEUCHOS_TEST_FOR_EXCEPTION(true, 
+                   std::logic_error,
+                   " Natural Boundary Condition: provide either 'Values' or 'Value' Parameter.");
+            }
+        }
+        else 
+        if ("Uniform Component" == type)
+        {
+            Teuchos::Array<double> values(NumDofs, 0.0);
+            auto fluxComponent = params.get<std::string>("Component");
+            auto value = params.get<double>("Value");
+            if( (fluxComponent == "x" || fluxComponent == "X") ) values[0] = value;
+            else
+            if( (fluxComponent == "y" || fluxComponent == "Y") && DofsPerNode > 1 ) values[1] = value;
+            else
+            if( (fluxComponent == "z" || fluxComponent == "Z") && DofsPerNode > 2 ) values[2] = value;
+            for(int i=0; i<NumDofs; i++) mFlux(i) = values[i];
+        } else {
+            TEUCHOS_TEST_FOR_EXCEPTION(true, 
+               std::logic_error,
+               " Natural Boundary Condition type invalid");
+        }
+    }
+  };
+
+  /******************************************************************************/
+  /*!
+    \brief Class for conformal natural boundary conditions.
+  */
+    template<int SpatialDim, int NumDofs=SpatialDim, int DofsPerNode=NumDofs, int DofOffset=0>
+    class ConformalNaturalBC : public NaturalBCBase<SpatialDim, NumDofs, DofsPerNode, DofOffset>
+  /******************************************************************************/
+  {
 
   public:
   
-    NaturalBC<SpatialDim,NumDofs,DofsPerNode,DofOffset>(const std::string &n, Teuchos::ParameterList &param) :
-      name(n),
-      ss_name(param.get<std::string>("Sides"))
-      {
-        auto flux = param.get<Teuchos::Array<double>>("Vector");
-        for(int i=0; i<NumDofs; i++)
-          m_flux(i) = flux[i];
-      }
-  
-    ~NaturalBC(){}
+    ConformalNaturalBC<SpatialDim,NumDofs,DofsPerNode,DofOffset>(const std::string &aName, Teuchos::ParameterList &aParams) :
+    NaturalBCBase<SpatialDim, NumDofs, DofsPerNode, DofOffset>(aName, aParams) {}
+
+    ~ConformalNaturalBC(){}
 
     /*!
       \brief Get the contribution to the assembled forcing vector.
@@ -68,11 +130,43 @@ namespace Plato {
               Plato::ScalarMultiVectorT< ResultScalarType> result,
               Plato::Scalar scale) const;
 
-    // ! Get sideset name
-    decltype(ss_name) const& get_ss_name() const { return ss_name; }
+  };
+  /******************************************************************************/
+  /*!
+    \brief Class for non-conformal natural boundary conditions.
+  */
+    template<int SpatialDim, int NumDofs=SpatialDim, int DofsPerNode=NumDofs, int DofOffset=0>
+    class NonConformalNaturalBC : public NaturalBCBase<SpatialDim, NumDofs, DofsPerNode, DofOffset>
+  /******************************************************************************/
+  {
 
-    // ! Get the user-specified flux.
-    decltype(m_flux) get_value() const { return m_flux; }
+      std::shared_ptr<Plato::CubatureRule<SpatialDim>> mCubature;
+    
+  public:
+  
+    NonConformalNaturalBC<SpatialDim,NumDofs,DofsPerNode,DofOffset>(
+      const std::string &aName, 
+      Teuchos::ParameterList &aParams, 
+      Omega_h::Mesh& aMesh
+    ) :
+    NaturalBCBase<SpatialDim, NumDofs, DofsPerNode, DofOffset>(aName, aParams)
+    {
+        // create cogent integrator
+        auto& cogentList = aParams.sublist("Cogent");
+        mCubature = std::make_shared<Plato::CogentCubature<SpatialDim>>(aMesh, cogentList);
+    }
+  
+    ~NonConformalNaturalBC(){}
+
+    template<typename StateScalarType,
+             typename ControlScalarType,
+             typename ResultScalarType>
+    void get( Omega_h::Mesh* aMesh,             
+              const Omega_h::MeshSets& aMeshSets,
+              Plato::ScalarMultiVectorT<  StateScalarType>,
+              Plato::ScalarMultiVectorT<ControlScalarType>,
+              Plato::ScalarMultiVectorT< ResultScalarType> result,
+              Plato::Scalar scale) const;
 
   };
   
@@ -86,7 +180,11 @@ namespace Plato {
   /******************************************************************************/
   {
   private:
-    std::vector<std::shared_ptr<NaturalBC<SpatialDim,NumDofs,DofsPerNode,DofOffset>>> BCs;
+    Omega_h::Mesh& mMesh;
+
+    std::vector<std::shared_ptr<ConformalNaturalBC<SpatialDim,NumDofs,DofsPerNode,DofOffset>>> m_cBCs;
+
+    std::vector<std::shared_ptr<NonConformalNaturalBC<SpatialDim,NumDofs,DofsPerNode,DofOffset>>> m_ncBCs;
 
   public :
 
@@ -94,7 +192,7 @@ namespace Plato {
       \brief Constructor that parses and creates a vector of NaturalBC objects
       based on the ParameterList.
     */
-    NaturalBCs(Teuchos::ParameterList &params);
+    NaturalBCs(Omega_h::Mesh &aMesh, Teuchos::ParameterList &params);
 
     /*!
       \brief Get the contribution to the assembled forcing vector from the owned boundary conditions.
@@ -102,16 +200,15 @@ namespace Plato {
       @param aMeshSets Omega_h mesh sets that contains sideset information.
       @param aResult Assembled vector to which the boundary terms will be added.
     */
-
     template<typename StateScalarType,
              typename ControlScalarType,
              typename ResultScalarType>
-    void get( Omega_h::Mesh* aMesh,             
-              const Omega_h::MeshSets& aMeshSets,
+    void get( const Omega_h::MeshSets& aMeshSets,
               Plato::ScalarMultiVectorT<  StateScalarType>,
               Plato::ScalarMultiVectorT<ControlScalarType>,
               Plato::ScalarMultiVectorT< ResultScalarType> result,
               Plato::Scalar scale = 1.0) const;
+
   };
 
   /**************************************************************************/
@@ -119,7 +216,7 @@ namespace Plato {
   template<typename StateScalarType,
            typename ControlScalarType,
            typename ResultScalarType>
-  void NaturalBC<SpatialDim,NumDofs,DofsPerNode,DofOffset>::get( Omega_h::Mesh* aMesh,             
+  void ConformalNaturalBC<SpatialDim,NumDofs,DofsPerNode,DofOffset>::get( Omega_h::Mesh* aMesh,             
                                                const Omega_h::MeshSets& aMeshSets,
                                                Plato::ScalarMultiVectorT<  StateScalarType>,
                                                Plato::ScalarMultiVectorT<ControlScalarType>,
@@ -129,7 +226,7 @@ namespace Plato {
   {
     // get sideset faces
     auto& sidesets = aMeshSets[Omega_h::SIDE_SET];
-    auto ssIter = sidesets.find(this->ss_name);
+    auto ssIter = sidesets.find(this->mSidesetName);
     auto faceLids = (ssIter->second);
     auto numFaces = faceLids.size();
 
@@ -148,7 +245,7 @@ namespace Plato {
     // create functor for accessing side node coordinates
     Plato::SideNodeCoordinate<SpatialDim> sideNodeCoordinate(aMesh);
     
-    auto flux = m_flux;
+    auto flux = this->mFlux;
     Kokkos::parallel_for(Kokkos::RangePolicy<int>(0,numFaces), LAMBDA_EXPRESSION(int iFace)
     {
 
@@ -198,10 +295,47 @@ namespace Plato {
     });
   }
 
+  /**************************************************************************/
+  template<int SpatialDim, int NumDofs, int DofsPerNode, int DofOffset>
+  template<typename StateScalarType,
+           typename ControlScalarType,
+           typename ResultScalarType>
+  void NonConformalNaturalBC<SpatialDim,NumDofs,DofsPerNode,DofOffset>::get( Omega_h::Mesh* aMesh,             
+                                               const Omega_h::MeshSets& aMeshSets,
+                                               Plato::ScalarMultiVectorT<  StateScalarType>,
+                                               Plato::ScalarMultiVectorT<ControlScalarType>,
+                                               Plato::ScalarMultiVectorT< ResultScalarType> result,
+                                               Plato::Scalar scale) const
+  /**************************************************************************/
+  {
+
+      auto nodesPerCell = SpatialDim+1;
+      auto numElems = aMesh->nelems();
+
+      auto flux = this->mFlux;
+      auto weights = mCubature->getCubWeights();
+      auto basis = mCubature->getBasisFunctions();
+      Kokkos::parallel_for(Kokkos::RangePolicy<int>(0,numElems), LAMBDA_EXPRESSION(int iElem)
+      {
+          for( int iNode=0; iNode<nodesPerCell; iNode++)
+          {
+              for( int iDof=0; iDof<NumDofs; iDof++)
+              {
+                  auto cellDofOrdinal = iNode * DofsPerNode + iDof + DofOffset;
+                  result(iElem, cellDofOrdinal) += basis(iNode) * weights(iElem) * flux[iDof];
+              }
+          }
+      });
+  }
+
 
   /****************************************************************************/
   template<int SpatialDim, int NumDofs, int DofsPerNode, int DofOffset>
-  NaturalBCs<SpatialDim,NumDofs,DofsPerNode,DofOffset>::NaturalBCs(Teuchos::ParameterList &params) : BCs()
+  NaturalBCs<SpatialDim,NumDofs,DofsPerNode,DofOffset>::
+  NaturalBCs(Omega_h::Mesh &aMesh, Teuchos::ParameterList &params) :
+    mMesh(aMesh),
+    m_cBCs(),
+    m_ncBCs()
   /****************************************************************************/
   {
     for (Teuchos::ParameterList::ConstIterator i = params.begin(); i != params.end(); ++i) {
@@ -211,51 +345,25 @@ namespace Plato {
       TEUCHOS_TEST_FOR_EXCEPTION(!entry.isList(),
          std::logic_error,
          "Parameter in Boundary Conditions block not valid.  Expect lists only.");
-  
+
       Teuchos::ParameterList& sublist = params.sublist(name);
-      const std::string type = sublist.get<std::string>("Type");
-      std::shared_ptr<NaturalBC<SpatialDim,NumDofs,DofsPerNode,DofOffset>> bc;
-      if ("Uniform" == type) {
-        bool b_Values = sublist.isType<Teuchos::Array<double>>("Values");
-        bool b_Value  = sublist.isType<double>("Value");
-        if ( b_Values && b_Value ) {
-          TEUCHOS_TEST_FOR_EXCEPTION(true, 
-             std::logic_error,
-             " Natural Boundary Condition: provide EITHER 'Values' OR 'Value' Parameter.");
-        } else 
-        if ( b_Values ) {
-          auto values = sublist.get<Teuchos::Array<double>>("Values");
-          sublist.set("Vector", values);
-        } else 
-        if ( b_Value ) {
-          Teuchos::Array<double> fluxVector(NumDofs, 0.0);
-          auto value = sublist.get<double>("Value");
-          fluxVector[0] = value;
-          sublist.set("Vector", fluxVector);
-        } else {
-          TEUCHOS_TEST_FOR_EXCEPTION(true, 
-             std::logic_error,
-             " Natural Boundary Condition: provide either 'Values' or 'Value' Parameter.");
-        }
-        bc.reset(new NaturalBC<SpatialDim,NumDofs,DofsPerNode,DofOffset>(name, sublist));
+
+      std::string geometryType("Mesh");
+      if( sublist.isType<std::string>("Geometry") )
+      {
+          geometryType = sublist.get<std::string>("Geometry");
       }
-      else if ("Uniform Component" == type){
-        Teuchos::Array<double> fluxVector(NumDofs, 0.0);
-        auto fluxComponent = sublist.get<std::string>("Component");
-        auto value = sublist.get<double>("Value");
-        if( (fluxComponent == "x" || fluxComponent == "X") ) fluxVector[0] = value;
-        else
-        if( (fluxComponent == "y" || fluxComponent == "Y") && DofsPerNode > 1 ) fluxVector[1] = value;
-        else
-        if( (fluxComponent == "z" || fluxComponent == "Z") && DofsPerNode > 2 ) fluxVector[2] = value;
-        sublist.set("Vector", fluxVector);
-        bc.reset(new NaturalBC<SpatialDim,NumDofs,DofsPerNode,DofOffset>(name, sublist));
-      } else {
-        TEUCHOS_TEST_FOR_EXCEPTION(true, 
-           std::logic_error,
-           " Natural Boundary Condition type invalid");
+
+      if( geometryType == "Mesh" )
+      {
+          m_cBCs.push_back(
+            std::make_shared<ConformalNaturalBC<SpatialDim,NumDofs,DofsPerNode,DofOffset>>(name, sublist));
+      } else 
+      if( geometryType == "Cogent" )
+      {
+          m_ncBCs.push_back(
+            std::make_shared<NonConformalNaturalBC<SpatialDim,NumDofs,DofsPerNode,DofOffset>>(name, sublist, mMesh));
       }
-      BCs.push_back(bc);
     }
   }
 
@@ -267,7 +375,7 @@ namespace Plato {
   template<typename StateScalarType,
            typename ControlScalarType,
            typename ResultScalarType>
-  void NaturalBCs<SpatialDim,NumDofs,DofsPerNode,DofOffset>::get(Omega_h::Mesh* aMesh,      
+  void NaturalBCs<SpatialDim,NumDofs,DofsPerNode,DofOffset>::get(
        const Omega_h::MeshSets& aMeshSets, 
        Kokkos::View<   StateScalarType**, Kokkos::LayoutRight, Plato::MemSpace > state,
        Kokkos::View< ControlScalarType**, Kokkos::LayoutRight, Plato::MemSpace > control,
@@ -275,8 +383,12 @@ namespace Plato {
        Plato::Scalar scale) const
   /**************************************************************************/
   {
-    for (const auto &bc : BCs){
-      bc->get(aMesh, aMeshSets, state, control, result, scale);
+    for (const auto &bc : m_cBCs){
+      bc->get(&mMesh, aMeshSets, state, control, result, scale);
+    }
+
+    for (const auto &bc : m_ncBCs){
+      bc->get(&mMesh, aMeshSets, state, control, result, scale);
     }
   }
 

@@ -101,13 +101,14 @@ private:
         auto xmlFileName = aInputParams.get<std::string>("Model");
         Teuchos::updateParametersFromXmlFile(xmlFileName, Teuchos::ptrFromRef(tGeomSpec));
 
+        mCogentCubature = tCogentFactory.create(tBlockTopology, tIntrepidBasis, tGeomSpec);
+
+
         bool mEnforceMinWeight = aInputParams.isType<double>("Minimum Weight");
         if( mEnforceMinWeight )
         {
             mMinWeight = aInputParams.get<double>("Minimum Weight");
         }
-
-        mCogentCubature = tCogentFactory.create(tBlockTopology, tIntrepidBasis, tGeomSpec);
 
         // get standard point locations
         Kokkos::DynRankView<Plato::Scalar, Kokkos::Serial> tPoints("points", 0, 0);

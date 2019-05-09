@@ -99,14 +99,16 @@ public:
         // 
         if(aProblemParams.isSublist("Mechanical Natural Boundary Conditions"))
         {
-            m_boundaryLoads =   std::make_shared<Plato::NaturalBCs<SpaceDim, NMechDims, m_numDofsPerNode, MDofOffset>>(aProblemParams.sublist("Mechanical Natural Boundary Conditions"));
+            m_boundaryLoads =   std::make_shared<Plato::NaturalBCs<SpaceDim, NMechDims, m_numDofsPerNode, MDofOffset>>
+              (aMesh, aProblemParams.sublist("Mechanical Natural Boundary Conditions"));
         }
   
         // parse electrical boundary Conditions
         // 
         if(aProblemParams.isSublist("Electrical Natural Boundary Conditions"))
         {
-            m_boundaryCharges = std::make_shared<Plato::NaturalBCs<SpaceDim, NElecDims, m_numDofsPerNode, EDofOffset>>(aProblemParams.sublist("Electrical Natural Boundary Conditions"));
+            m_boundaryCharges = std::make_shared<Plato::NaturalBCs<SpaceDim, NElecDims, m_numDofsPerNode, EDofOffset>>
+              (aMesh, aProblemParams.sublist("Electrical Natural Boundary Conditions"));
         }
   
         auto tResidualParams = aProblemParams.sublist("Electroelastostatics");
@@ -185,12 +187,12 @@ public:
 
       if( m_boundaryLoads != nullptr )
       {
-          m_boundaryLoads->get( &mMesh, mMeshSets, state, control, result );
+          m_boundaryLoads->get( mMeshSets, state, control, result );
       }
 
       if( m_boundaryCharges != nullptr )
       {
-          m_boundaryCharges->get( &mMesh, mMeshSets, state, control, result );
+          m_boundaryCharges->get( mMeshSets, state, control, result );
       }
 
       if( std::count(m_plottable.begin(),m_plottable.end(),"strain") ) toMap(m_dataMap, strain, "strain");
