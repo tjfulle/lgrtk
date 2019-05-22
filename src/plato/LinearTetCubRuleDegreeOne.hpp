@@ -18,13 +18,13 @@ namespace Plato
 
 /******************************************************************************/
 template<Plato::OrdinalType SpaceDim>
-class LinearTetCubRuleDegreeOne : public Plato::CubatureRule<SpaceDim>
+class LinearTetCubRuleDegreeOne : public Plato::CubatureRuleDegreeOne<SpaceDim>
 /******************************************************************************/
 {
 public:
     /******************************************************************************/
     LinearTetCubRuleDegreeOne() : 
-      Plato::CubatureRule<SpaceDim>(),
+      Plato::CubatureRuleDegreeOne<SpaceDim>(),
       mCubWeight(1.0)
     /******************************************************************************/
     {
@@ -32,7 +32,7 @@ public:
     }
     /******************************************************************************/
     LinearTetCubRuleDegreeOne(Omega_h::Mesh& aMesh) : 
-      Plato::CubatureRule<SpaceDim>(aMesh),
+      Plato::CubatureRuleDegreeOne<SpaceDim>(aMesh),
       mCubWeight(1.0)
     /******************************************************************************/
     {

@@ -16,7 +16,7 @@ class AbstractVectorFunctionInc
 {
 protected:
     Omega_h::Mesh& mMesh;
-    Plato::DataMap& m_dataMap;
+    Plato::DataMap m_dataMap;
     Omega_h::MeshSets& mMeshSets;
     std::vector<std::string> mDofNames;
 
@@ -26,7 +26,7 @@ public:
     AbstractVectorFunctionInc(
         Omega_h::Mesh& aMesh, 
         Omega_h::MeshSets& aMeshSets,
-        Plato::DataMap& aDataMap,
+        Plato::DataMap aDataMap,
         std::vector<std::string> aStateNames) :
     /******************************************************************************/
             mMesh(aMesh),

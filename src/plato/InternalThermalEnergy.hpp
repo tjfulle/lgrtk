@@ -50,7 +50,7 @@ class InternalThermalEnergy :
     
     IndicatorFunctionType m_indicatorFunction; /*!< penalty function */
     Plato::ApplyWeighting<mSpaceDim,mSpaceDim,IndicatorFunctionType> m_applyWeighting; /*!< applies penalty function */
-    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
+    std::shared_ptr<Plato::CubatureRuleDegreeOne<EvaluationType::SpatialDim>> mCubatureRule;
 
 
   public:
@@ -63,7 +63,7 @@ class InternalThermalEnergy :
     **********************************************************************************/
     InternalThermalEnergy(Omega_h::Mesh& aMesh,
                           Omega_h::MeshSets& aMeshSets,
-                          Plato::DataMap& aDataMap,
+                          Plato::DataMap aDataMap,
                           Teuchos::ParameterList& aProblemParams,
                           Teuchos::ParameterList& aPenaltyParams) :
             Plato::AbstractScalarFunction<EvaluationType>(aMesh, aMeshSets, aDataMap, "Internal Thermal Energy"),
@@ -74,7 +74,7 @@ class InternalThermalEnergy :
       auto tMaterialModel = tMaterialModelFactory.create();
       m_cellConductivity = tMaterialModel->getConductivityMatrix();
 
-      Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+      Plato::DegreeOneCubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
       mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
 
@@ -173,13 +173,13 @@ class InternalThermalEnergyInc :
     
     IndicatorFunctionType m_indicatorFunction;
     ApplyWeighting<mSpaceDim,mSpaceDim,IndicatorFunctionType> m_applyWeighting;
-    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
+    std::shared_ptr<Plato::CubatureRuleDegreeOne<EvaluationType::SpatialDim>> mCubatureRule;
 
   public:
     /**************************************************************************/
     InternalThermalEnergyInc(Omega_h::Mesh& aMesh,
                              Omega_h::MeshSets& aMeshSets,
-                             Plato::DataMap& aDataMap,
+                             Plato::DataMap aDataMap,
                              Teuchos::ParameterList& aProblemParams,
                              Teuchos::ParameterList& aPenaltyParams) :
             Plato::AbstractScalarFunctionInc<EvaluationType>(aMesh, aMeshSets, aDataMap, "Internal Thermal Energy"),
@@ -191,7 +191,7 @@ class InternalThermalEnergyInc :
       auto materialModel = mmfactory.create();
       m_cellConductivity = materialModel->getConductivityMatrix();
 
-      Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+      Plato::DegreeOneCubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
       mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
 

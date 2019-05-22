@@ -304,25 +304,30 @@ namespace Plato {
                                                const Omega_h::MeshSets& aMeshSets,
                                                Plato::ScalarMultiVectorT<  StateScalarType>,
                                                Plato::ScalarMultiVectorT<ControlScalarType>,
-                                               Plato::ScalarMultiVectorT< ResultScalarType> result,
+                                               Plato::ScalarMultiVectorT< ResultScalarType> aResult,
                                                Plato::Scalar scale) const
   /**************************************************************************/
   {
 
-      auto nodesPerCell = SpatialDim+1;
-      auto numElems = aMesh->nelems();
+      auto tNodesPerCell = SpatialDim+1;
+      auto tNumElems = aMesh->nelems();
 
-      auto flux = this->mFlux;
-      auto weights = mCubature->getCubWeights();
-      auto basis = mCubature->getBasisFunctions();
-      Kokkos::parallel_for(Kokkos::RangePolicy<int>(0,numElems), LAMBDA_EXPRESSION(int iElem)
+      auto tFlux = this->mFlux;
+      auto tWeights = mCubature->getCubWeights();
+      auto tBasis = mCubature->getBasisFunctions();
+
+      auto tNumGPs = tBasis.extent(1);
+      Kokkos::parallel_for(Kokkos::RangePolicy<int>(0,tNumElems), LAMBDA_EXPRESSION(int iElem)
       {
-          for( int iNode=0; iNode<nodesPerCell; iNode++)
+          for( int iNode=0; iNode<tNodesPerCell; iNode++)
           {
-              for( int iDof=0; iDof<NumDofs; iDof++)
+              for( int iGP=0; iGP<tNumGPs; iGP++)
               {
-                  auto cellDofOrdinal = iNode * DofsPerNode + iDof + DofOffset;
-                  result(iElem, cellDofOrdinal) += basis(iNode) * weights(iElem) * flux[iDof];
+                  for( int iDof=0; iDof<NumDofs; iDof++)
+                  {
+                      auto cellDofOrdinal = iNode * DofsPerNode + iDof + DofOffset;
+                      aResult(iElem, cellDofOrdinal) += tBasis(iGP, iNode) * tWeights(iElem, iGP) * tFlux[iDof];
+                  }
               }
           }
       });

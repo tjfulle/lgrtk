@@ -39,14 +39,14 @@ private:
     ProjectionFuncType mProjectionFunction;
     Plato::ApplyProjection<ProjectionFuncType> mApplyProjection;
 
-    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
+    std::shared_ptr<Plato::CubatureRuleDegreeOne<EvaluationType::SpatialDim>> mCubatureRule;
 
 
 public:
     /**************************************************************************/
     explicit ExpVolume(Omega_h::Mesh& aMesh,
                        Omega_h::MeshSets& aMeshSets,
-                       Plato::DataMap& aDataMap, 
+                       Plato::DataMap aDataMap, 
                        Teuchos::ParameterList & aPenaltyParams) :
             Plato::AbstractScalarFunction<EvaluationType>(aMesh, aMeshSets, aDataMap, "Experimental Volume"),
             mProjectionFunction(),
@@ -54,21 +54,21 @@ public:
             mApplyProjection(mProjectionFunction)
     /**************************************************************************/
     {
-         Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+         Plato::DegreeOneCubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
          mCubatureRule = tCubatureFactory.create(aMesh);
     }
 
     /**************************************************************************/
     explicit ExpVolume(Omega_h::Mesh& aMesh,
                        Omega_h::MeshSets& aMeshSets, 
-                       Plato::DataMap& aDataMap) :
+                       Plato::DataMap aDataMap) :
             Plato::AbstractScalarFunction<EvaluationType>(aMesh, aMeshSets, aDataMap, "Experimental Volume"),
             mProjectionFunction(),
             mPenaltyFunction(3.0, 0.0),
             mApplyProjection(mProjectionFunction)
     /**************************************************************************/
     {
-         Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+         Plato::DegreeOneCubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
          mCubatureRule = tCubatureFactory.create(aMesh);
     }
 

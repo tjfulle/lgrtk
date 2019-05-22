@@ -78,7 +78,7 @@ public:
     **********************************************************************************/
     explicit AdjointStructuralDynamicsResidual(Omega_h::Mesh& aMesh, 
                                                Omega_h::MeshSets& aMeshSets,
-                                               Plato::DataMap& aDataMap,
+                                               Plato::DataMap aDataMap,
                                                Teuchos::ParameterList & aProblemParams,
                                                Teuchos::ParameterList& aPenaltyParams) :
             AbstractVectorFunction<EvaluationType>(aMesh, aMeshSets, aDataMap),
@@ -106,7 +106,7 @@ public:
     **********************************************************************************/
     explicit AdjointStructuralDynamicsResidual(Omega_h::Mesh& aMesh, 
                                                Omega_h::MeshSets& aMeshSets, 
-                                               Plato::DataMap& aDataMap, 
+                                               Plato::DataMap aDataMap, 
                                                Teuchos::ParameterList & aProblemParams) :
             AbstractVectorFunction<EvaluationType>(aMesh, aMeshSets, aDataMap),
             mDensity(aProblemParams.get<double>("Material Density", 1.0)),
@@ -130,7 +130,7 @@ public:
      * @param [in] aDataMap problem-specific data storage
      *
     **********************************************************************************/
-    explicit AdjointStructuralDynamicsResidual(Omega_h::Mesh& aMesh, Omega_h::MeshSets& aMeshSets, Plato::DataMap& aDataMap) :
+    explicit AdjointStructuralDynamicsResidual(Omega_h::Mesh& aMesh, Omega_h::MeshSets& aMeshSets, Plato::DataMap aDataMap) :
             AbstractVectorFunction<EvaluationType>(aMesh, aMeshSets, aDataMap),
             mDensity(1),
             mMassPropDamp(0.0),

@@ -61,7 +61,7 @@ private:
     std::shared_ptr<Plato::NaturalBCs<SpaceDim, NMechDims, m_numDofsPerNode, MDofOffset>> m_boundaryLoads;
     std::shared_ptr<Plato::NaturalBCs<SpaceDim, NThrmDims, m_numDofsPerNode, TDofOffset>> m_boundaryFluxes;
 
-    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
+    std::shared_ptr<Plato::CubatureRuleDegreeOne<EvaluationType::SpatialDim>> mCubatureRule;
 
     Teuchos::RCP<Plato::LinearThermoelasticMaterial<SpaceDim>> m_materialModel;
 
@@ -71,7 +71,7 @@ public:
     /**************************************************************************/
     ThermoelastostaticResidual(Omega_h::Mesh& aMesh,
                                Omega_h::MeshSets& aMeshSets,
-                               Plato::DataMap& aDataMap,
+                               Plato::DataMap aDataMap,
                                Teuchos::ParameterList& aProblemParams,
                                Teuchos::ParameterList& aPenaltyParams) :
             Plato::AbstractVectorFunction<EvaluationType>(aMesh, aMeshSets, aDataMap),
@@ -116,7 +116,7 @@ public:
         if( tResidualParams.isType<Teuchos::Array<std::string>>("Plottable") )
           m_plottable = tResidualParams.get<Teuchos::Array<std::string>>("Plottable").toVector();
 
-        Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+        Plato::DegreeOneCubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
         mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
 
     }

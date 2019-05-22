@@ -46,7 +46,7 @@ private:
     std::shared_ptr<Plato::AbstractScalarFunction<GradientX>> mScalarFunctionGradientX; /*!< scalar function value partial wrt configuration */
     std::shared_ptr<Plato::AbstractScalarFunction<GradientZ>> mScalarFunctionGradientZ; /*!< scalar function value partial wrt controls */
 
-    Plato::DataMap& m_dataMap; /*!< PLATO Engine and Analyze data map */
+    Plato::DataMap m_dataMap; /*!< PLATO Engine and Analyze data map */
 
 public:
     /******************************************************************************//**
@@ -59,7 +59,7 @@ public:
     **********************************************************************************/
     ScalarFunction(Omega_h::Mesh& aMesh,
                    Omega_h::MeshSets& aMeshSets,
-                   Plato::DataMap & aDataMap,
+                   Plato::DataMap aDataMap,
                    Teuchos::ParameterList& aInputParams,
                    const std::string & aFuncName) :
             Plato::WorksetBase<PhysicsT>(aMesh),
@@ -85,7 +85,7 @@ public:
      * @param [in] aMesh mesh database
      * @param [in] aMeshSets side sets database
     **********************************************************************************/
-    ScalarFunction(Omega_h::Mesh& aMesh, Plato::DataMap& aDataMap) :
+    ScalarFunction(Omega_h::Mesh& aMesh, Plato::DataMap aDataMap) :
             Plato::WorksetBase<PhysicsT>(aMesh),
             mScalarFunctionValue(nullptr),
             mScalarFunctionGradientU(nullptr),
@@ -190,7 +190,7 @@ public:
         //
         Plato::ScalarVectorT<ResultScalar> tResult("result", m_numCells);
 
-        m_dataMap.scalarVectors[mScalarFunctionValue->getName()] = tResult;
+        m_dataMap->scalarVectors[mScalarFunctionValue->getName()] = tResult;
 
         // evaluate function
         //

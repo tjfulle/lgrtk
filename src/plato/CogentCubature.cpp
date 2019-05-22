@@ -9,14 +9,17 @@
 
 #ifdef PLATO_1D
 template class Plato::CogentCubature<1>;
+template class Plato::CogentCubatureDegreeOne<1>;
 #endif
 
 #ifdef PLATO_2D
 template class Plato::CogentCubature<2>;
+template class Plato::CogentCubatureDegreeOne<2>;
 #endif
 
 #ifdef PLATO_3D
 template class Plato::CogentCubature<3>;
+template class Plato::CogentCubatureDegreeOne<3>;
 #endif
 
 #endif /* PLATO_GEOMETRY */

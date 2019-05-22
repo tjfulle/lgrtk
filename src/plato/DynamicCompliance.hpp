@@ -59,13 +59,13 @@ private:
     Plato::ApplyProjection<ProjectionFuncType> mApplyProjection;
 
     Omega_h::Matrix<m_numVoigtTerms, m_numVoigtTerms> mCellStiffness;
-    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
+    std::shared_ptr<Plato::CubatureRuleDegreeOne<EvaluationType::SpatialDim>> mCubatureRule;
 
 public:
     /**************************************************************************/
     DynamicCompliance(Omega_h::Mesh& aMesh,
                       Omega_h::MeshSets& aMeshSets,
-                      Plato::DataMap& aDataMap, 
+                      Plato::DataMap aDataMap, 
                       Teuchos::ParameterList& aProblemParams,
                       Teuchos::ParameterList& aPenaltyParams) :
             Plato::AbstractScalarFunction<EvaluationType>(aMesh, aMeshSets, aDataMap, "Dynamic Energy"),
@@ -82,11 +82,11 @@ public:
         auto tMaterialModel = tElasticModelFactory.create();
         mCellStiffness = tMaterialModel->getStiffnessMatrix();
 
-        Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+        Plato::DegreeOneCubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
         mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
     /**************************************************************************/
-    DynamicCompliance(Omega_h::Mesh& aMesh, Omega_h::MeshSets& aMeshSets, Plato::DataMap& aDataMap) :
+    DynamicCompliance(Omega_h::Mesh& aMesh, Omega_h::MeshSets& aMeshSets, Plato::DataMap aDataMap) :
             Plato::AbstractScalarFunction<EvaluationType>(aMesh, aMeshSets, aDataMap, "Dynamic Energy"),
             mDensity(1.0),
             mProjectionFunction(),
@@ -103,7 +103,7 @@ public:
         Plato::IsotropicLinearElasticMaterial<EvaluationType::SpatialDim> tDefaultMaterialModel(tParamList);
         mCellStiffness = tDefaultMaterialModel.getStiffnessMatrix();
 
-        Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+        Plato::DegreeOneCubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
         mCubatureRule = tCubatureFactory.create(aMesh);
     }
 

@@ -47,7 +47,7 @@ class VectorFunction : public Plato::WorksetBase<PhysicsT>
     std::shared_ptr<Plato::AbstractVectorFunction<GradientX>> mVectorFunctionJacobianX;
     std::shared_ptr<Plato::AbstractVectorFunction<GradientZ>> mVectorFunctionJacobianZ;
 
-    Plato::DataMap& m_dataMap;
+    Plato::DataMap m_dataMap;
 
   public:
 
@@ -63,7 +63,7 @@ class VectorFunction : public Plato::WorksetBase<PhysicsT>
     ******************************************************************************/
     VectorFunction(Omega_h::Mesh& aMesh,
                    Omega_h::MeshSets& aMeshSets,
-                   Plato::DataMap& aDataMap,
+                   Plato::DataMap aDataMap,
                    Teuchos::ParameterList& aParamList,
                    std::string& aProblemType) :
             Plato::WorksetBase<PhysicsT>(aMesh),
@@ -87,7 +87,7 @@ class VectorFunction : public Plato::WorksetBase<PhysicsT>
     * @param [in] aDataMap problem-specific data map 
     *
     ******************************************************************************/
-    VectorFunction(Omega_h::Mesh& aMesh, Plato::DataMap& aDataMap) :
+    VectorFunction(Omega_h::Mesh& aMesh, Plato::DataMap aDataMap) :
             Plato::WorksetBase<PhysicsT>(aMesh),
             mVectorFunctionResidual(),
             mVectorFunctionJacobianU(),

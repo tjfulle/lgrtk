@@ -62,7 +62,7 @@ class HeatEquationResidual :
     Plato::ApplyWeighting<SpaceDim,SpaceDim,IndicatorFunctionType> m_applyFluxWeighting;
     Plato::ApplyWeighting<SpaceDim,m_numDofsPerNode,IndicatorFunctionType> m_applyMassWeighting;
 
-    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> m_cubatureRule;
+    std::shared_ptr<Plato::CubatureRuleDegreeOne<EvaluationType::SpatialDim>> m_cubatureRule;
 
     std::shared_ptr<Plato::NaturalBCs<SpaceDim,m_numDofsPerNode>> m_boundaryLoads;
 
@@ -71,7 +71,7 @@ class HeatEquationResidual :
     HeatEquationResidual(
       Omega_h::Mesh& aMesh,
       Omega_h::MeshSets& aMeshSets,
-      Plato::DataMap& aDataMap,
+      Plato::DataMap aDataMap,
       Teuchos::ParameterList& aProblemParams,
       Teuchos::ParameterList& aPenaltyParams) :
      AbstractVectorFunctionInc<EvaluationType>(aMesh, aMeshSets, aDataMap, {"Temperature"}),
@@ -96,7 +96,7 @@ class HeatEquationResidual :
             (aMesh, aProblemParams.sublist("Natural Boundary Conditions"));
       }
 
-       Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+       Plato::DegreeOneCubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
        m_cubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     
     }

@@ -65,7 +65,7 @@ class TransientThermomechResidual :
     Plato::ApplyWeighting<SpaceDim, SpaceDim,         IndicatorFunctionType> m_applyFluxWeighting;
     Plato::ApplyWeighting<SpaceDim, NThrmDims,        IndicatorFunctionType> m_applyMassWeighting;
 
-    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> m_cubatureRule;
+    std::shared_ptr<Plato::CubatureRuleDegreeOne<EvaluationType::SpatialDim>> m_cubatureRule;
 
     std::shared_ptr<Plato::NaturalBCs<SpaceDim, NMechDims, m_numDofsPerNode, MDofOffset>> m_boundaryLoads;
     std::shared_ptr<Plato::NaturalBCs<SpaceDim, NThrmDims, m_numDofsPerNode, TDofOffset>> m_boundaryFluxes;
@@ -77,7 +77,7 @@ class TransientThermomechResidual :
     TransientThermomechResidual(
       Omega_h::Mesh& aMesh,
       Omega_h::MeshSets& aMeshSets,
-      Plato::DataMap& aDataMap,
+      Plato::DataMap aDataMap,
       Teuchos::ParameterList& aProblemParams,
       Teuchos::ParameterList& aPenaltyParams) :
      Plato::AbstractVectorFunctionInc<EvaluationType>(aMesh, aMeshSets, aDataMap,
@@ -110,7 +110,7 @@ class TransientThermomechResidual :
           m_boundaryFluxes = std::make_shared<Plato::NaturalBCs<SpaceDim, NThrmDims, m_numDofsPerNode, TDofOffset>>
             (aMesh, aProblemParams.sublist("Thermal Natural Boundary Conditions"));
       }
-      Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+      Plato::DegreeOneCubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
       m_cubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
 

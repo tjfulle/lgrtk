@@ -41,7 +41,7 @@ class TemperatureAverageInc :
     using ConfigScalarType    = typename EvaluationType::ConfigScalarType;
     using ResultScalarType    = typename EvaluationType::ResultScalarType;
 
-    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> m_cubatureRule;
+    std::shared_ptr<Plato::CubatureRuleDegreeOne<EvaluationType::SpatialDim>> m_cubatureRule;
 
     IndicatorFunctionType m_indicatorFunction;
     Plato::ApplyWeighting<SpaceDim,m_numDofsPerNode,IndicatorFunctionType> m_applyWeighting;
@@ -50,7 +50,7 @@ class TemperatureAverageInc :
     /**************************************************************************/
     TemperatureAverageInc(Omega_h::Mesh& aMesh,
                         Omega_h::MeshSets& aMeshSets,
-                        Plato::DataMap& aDataMap,
+                        Plato::DataMap aDataMap,
                         Teuchos::ParameterList& aProblemParams,
                         Teuchos::ParameterList& aPenaltyParams) :
             Plato::AbstractScalarFunctionInc<EvaluationType>(aMesh, aMeshSets, aDataMap, "Temperature Average"),
@@ -58,7 +58,7 @@ class TemperatureAverageInc :
             m_applyWeighting(m_indicatorFunction)
     /**************************************************************************/
     {
-         Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+         Plato::DegreeOneCubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
          m_cubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
 

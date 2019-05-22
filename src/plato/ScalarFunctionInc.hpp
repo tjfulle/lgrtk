@@ -49,14 +49,14 @@ class ScalarFunctionInc : public Plato::WorksetBase<PhysicsT>
     std::shared_ptr<Plato::AbstractScalarFunctionInc<GradientX>> mScalarFunctionGradientX;
     std::shared_ptr<Plato::AbstractScalarFunctionInc<GradientZ>> mScalarFunctionGradientZ;
 
-     Plato::DataMap& m_dataMap;
+     Plato::DataMap m_dataMap;
 
   public:
 
     /**************************************************************************/
     ScalarFunctionInc(Omega_h::Mesh& aMesh, 
                       Omega_h::MeshSets& aMeshSets,
-                      Plato::DataMap & aDataMap,
+                      Plato::DataMap aDataMap,
                       Teuchos::ParameterList& aParamList,
                       const std::string & aScalarFunctionType ) :
             Plato::WorksetBase<PhysicsT>(aMesh),
@@ -82,7 +82,7 @@ class ScalarFunctionInc : public Plato::WorksetBase<PhysicsT>
     }
 
     /**************************************************************************/
-    ScalarFunctionInc(Omega_h::Mesh& aMesh, Plato::DataMap& aDataMap) :
+    ScalarFunctionInc(Omega_h::Mesh& aMesh, Plato::DataMap aDataMap) :
             Plato::WorksetBase<PhysicsT>(aMesh),
             mScalarFunctionValue(nullptr),
             mScalarFunctionGradientU(nullptr),
@@ -146,7 +146,7 @@ class ScalarFunctionInc : public Plato::WorksetBase<PhysicsT>
       //
       Plato::ScalarVectorT<ResultScalar> tResult("result",m_numCells);
 
-      m_dataMap.scalarVectors[mScalarFunctionValue->getName()] = tResult;
+      m_dataMap->scalarVectors[mScalarFunctionValue->getName()] = tResult;
 
 
       Plato::ScalarMultiVectorT<StateScalar>     tStateWS("state workset",m_numCells,m_numDofsPerCell);

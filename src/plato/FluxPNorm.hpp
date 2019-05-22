@@ -45,7 +45,7 @@ class FluxPNorm :
     
     IndicatorFunctionType m_indicatorFunction;
     Plato::ApplyWeighting<SpaceDim,SpaceDim,IndicatorFunctionType> m_applyWeighting;
-    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
+    std::shared_ptr<Plato::CubatureRuleDegreeOne<EvaluationType::SpatialDim>> mCubatureRule;
 
     Plato::OrdinalType m_exponent;
 
@@ -53,7 +53,7 @@ class FluxPNorm :
     /**************************************************************************/
     FluxPNorm(Omega_h::Mesh& aMesh, 
               Omega_h::MeshSets& aMeshSets,
-              Plato::DataMap& aDataMap, 
+              Plato::DataMap aDataMap, 
               Teuchos::ParameterList& aProblemParams, 
               Teuchos::ParameterList& aPenaltyParams) :
             Plato::AbstractScalarFunction<EvaluationType>(aMesh, aMeshSets, aDataMap, "Flux P-Norm"),
@@ -69,7 +69,7 @@ class FluxPNorm :
 
       m_exponent = params.get<double>("Exponent");
 
-      Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+      Plato::DegreeOneCubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
       mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
 

@@ -30,7 +30,7 @@ struct FunctionFactory{
   createVectorFunction(
     Omega_h::Mesh& aMesh,
     Omega_h::MeshSets& aMeshSets, 
-    Plato::DataMap& aDataMap,
+    Plato::DataMap aDataMap,
     Teuchos::ParameterList& aParamList,
     std::string strVectorFunctionType )
   {
@@ -58,7 +58,7 @@ struct FunctionFactory{
   createVectorFunctionInc(
     Omega_h::Mesh& aMesh,
     Omega_h::MeshSets& aMeshSets, 
-    Plato::DataMap& aDataMap,
+    Plato::DataMap aDataMap,
     Teuchos::ParameterList& aParamList,
     std::string strVectorFunctionType )
   {
@@ -85,7 +85,7 @@ struct FunctionFactory{
   createScalarFunction( 
     Omega_h::Mesh& aMesh,
     Omega_h::MeshSets& aMeshSets,
-    Plato::DataMap& aDataMap,
+    Plato::DataMap aDataMap,
     Teuchos::ParameterList& aParamList,
     std::string strScalarFunctionType )
   {
@@ -143,7 +143,7 @@ struct FunctionFactory{
   createScalarFunctionInc( 
     Omega_h::Mesh& aMesh,
     Omega_h::MeshSets& aMeshSets,
-    Plato::DataMap& aDataMap,
+    Plato::DataMap aDataMap,
     Teuchos::ParameterList& aParamList,
     std::string strScalarFunctionType )
   {
@@ -190,7 +190,7 @@ struct FunctionFactory{
 template <Plato::OrdinalType SpaceDimParam>
 class Thermal : public Plato::SimplexThermal<SpaceDimParam> {
   public:
-    using FunctionFactory = typename Plato::ThermalFactory::FunctionFactory<SpaceDimParam>;
+    typedef Plato::ThermalFactory::FunctionFactory<SpaceDimParam> FunctionFactory;
     using SimplexT = SimplexThermal<SpaceDimParam>;
     static constexpr Plato::OrdinalType SpaceDim = SpaceDimParam;
 };

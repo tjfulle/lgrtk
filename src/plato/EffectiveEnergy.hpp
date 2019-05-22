@@ -48,7 +48,7 @@ class EffectiveEnergy :
 
     IndicatorFunctionType m_indicatorFunction;
     Plato::ApplyWeighting<mSpaceDim,m_numVoigtTerms,IndicatorFunctionType> m_applyWeighting;
-    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
+    std::shared_ptr<Plato::CubatureRuleDegreeOne<EvaluationType::SpatialDim>> mCubatureRule;
 
     Omega_h::Matrix< m_numVoigtTerms, m_numVoigtTerms> m_cellStiffness;
     Omega_h::Vector<m_numVoigtTerms> m_assumedStrain;
@@ -58,7 +58,7 @@ class EffectiveEnergy :
     /**************************************************************************/
     EffectiveEnergy(Omega_h::Mesh& aMesh,
                     Omega_h::MeshSets& aMeshSets,
-                    Plato::DataMap& aDataMap,
+                    Plato::DataMap aDataMap,
                     Teuchos::ParameterList& aProblemParams,
                     Teuchos::ParameterList& aPenaltyParams) :
             Plato::AbstractScalarFunction<EvaluationType>(aMesh, aMeshSets, aDataMap, "Effective Energy"),
@@ -88,7 +88,7 @@ class EffectiveEnergy :
       {
           // JR TODO: throw
       }
-      Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+      Plato::DegreeOneCubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
       mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
 

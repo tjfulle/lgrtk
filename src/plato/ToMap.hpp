@@ -15,7 +15,7 @@ namespace Plato
  * @param [in] aEntryName output data name
  **********************************************************************************/
 template<typename InputType>
-inline void toMap(Plato::DataMap& aDataMap, const InputType aInput, const std::string & aEntryName)
+inline void toMap(Plato::DataMap aDataMap, const InputType aInput, const std::string & aEntryName)
 {
     // don't add to map
 }
@@ -28,9 +28,9 @@ inline void toMap(Plato::DataMap& aDataMap, const InputType aInput, const std::s
  * @param [in] aEntryName output data name
  **********************************************************************************/
 template<>
-inline void toMap(Plato::DataMap& aDataMap, const Plato::ScalarVector aInput, const std::string & aEntryName)
+inline void toMap(Plato::DataMap aDataMap, const Plato::ScalarVector aInput, const std::string & aEntryName)
 {
-    aDataMap.scalarVectors[aEntryName] = aInput;
+    aDataMap->scalarVectors[aEntryName] = aInput;
 }
 // function toMap
 
@@ -41,9 +41,9 @@ inline void toMap(Plato::DataMap& aDataMap, const Plato::ScalarVector aInput, co
  * @param [in] aEntryName output data name
  **********************************************************************************/
 template<>
-inline void toMap(Plato::DataMap& aDataMap, const Plato::ScalarMultiVector aInput, const std::string & aEntryName)
+inline void toMap(Plato::DataMap aDataMap, const Plato::ScalarMultiVector aInput, const std::string & aEntryName)
 {
-    aDataMap.scalarMultiVectors[aEntryName] = aInput;
+    aDataMap->scalarMultiVectors[aEntryName] = aInput;
 }
 // function toMap
 
@@ -54,9 +54,9 @@ inline void toMap(Plato::DataMap& aDataMap, const Plato::ScalarMultiVector aInpu
  * @param [in] aEntryName output data name
  **********************************************************************************/
 template<>
-inline void toMap(Plato::DataMap& aDataMap, const Plato::ScalarArray3D aInput, const std::string & aEntryName)
+inline void toMap(Plato::DataMap aDataMap, const Plato::ScalarArray3D aInput, const std::string & aEntryName)
 {
-    aDataMap.scalarArray3Ds[aEntryName] = aInput;
+    aDataMap->scalarArray3Ds[aEntryName] = aInput;
 }
 // function toMap
 

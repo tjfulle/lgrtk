@@ -27,7 +27,7 @@ class CubatureFactory
 /**********************************************************************************/
 public:
     std::shared_ptr<Plato::CubatureRule<SpatialDim>> 
-    create(Omega_h::Mesh& aMesh, Teuchos::ParameterList& aProblemParams)
+    create(Omega_h::Mesh& aMesh, Teuchos::ParameterList& aProblemParams, Plato::DataMap dm = nullptr)
     {
 
         bool hasCubatureSpec = aProblemParams.isSublist("Cubature");
@@ -44,7 +44,7 @@ public:
             if(tCubatureType == "Cogent")
             {
 #ifdef PLATO_GEOMETRY
-                return std::make_shared<Plato::CogentCubature<SpatialDim>>(aMesh, tTypeSpec);
+                return std::make_shared<Plato::CogentCubature<SpatialDim>>(aMesh, tTypeSpec, dm);
 #else
                 std::ostringstream tErrorMessage;
                 tErrorMessage << " Fatal error -- Cogent cubature not compiled.  " << tCubatureType << std::endl;
@@ -63,13 +63,64 @@ public:
         }
     }
 
-    std::shared_ptr<Plato::CubatureRule<SpatialDim>> 
-    create(Omega_h::Mesh& aMesh)
+    std::shared_ptr<Plato::CubatureRuleDegreeOne<SpatialDim>> 
+    create(Omega_h::Mesh& aMesh, Plato::DataMap dm = nullptr)
     {
         return std::make_shared<Plato::LinearTetCubRuleDegreeOne<SpatialDim>>(aMesh);
     }
 };
-// class CubatureFactory
+
+
+/**********************************************************************************/
+template<int SpatialDim>
+class DegreeOneCubatureFactory
+{
+/**********************************************************************************/
+public:
+    std::shared_ptr<Plato::CubatureRuleDegreeOne<SpatialDim>> 
+    create(Omega_h::Mesh& aMesh, Teuchos::ParameterList& aProblemParams, Plato::DataMap dm = nullptr)
+    {
+
+        bool hasCubatureSpec = aProblemParams.isSublist("Cubature");
+
+        if(hasCubatureSpec)
+        {
+            auto tCubatureSpec = aProblemParams.sublist("Cubature");
+            auto tCubatureType = tCubatureSpec.get<std::string>("Type");
+            auto tTypeSpec = tCubatureSpec.sublist(tCubatureType);
+            if(tCubatureType == "Gauss")
+            {
+                return std::make_shared<Plato::LinearTetCubRuleDegreeOne<SpatialDim>>(aMesh);
+            } else
+            if(tCubatureType == "Cogent")
+            {
+#ifdef PLATO_GEOMETRY
+                return std::make_shared<Plato::CogentCubatureDegreeOne<SpatialDim>>(aMesh, tTypeSpec, dm);
+#else
+                std::ostringstream tErrorMessage;
+                tErrorMessage << " Fatal error -- Cogent cubature not compiled.  " << tCubatureType << std::endl;
+                throw std::runtime_error(tErrorMessage.str().c_str());
+#endif
+            } else
+            {
+                std::ostringstream tErrorMessage;
+                tErrorMessage << " Fatal error -- Unknown cubature type requested: " << tCubatureType << std::endl;
+                throw std::runtime_error(tErrorMessage.str().c_str());
+            }
+        }
+        else
+        {
+            return std::make_shared<Plato::LinearTetCubRuleDegreeOne<SpatialDim>>(aMesh);
+        }
+    }
+
+    std::shared_ptr<Plato::CubatureRuleDegreeOne<SpatialDim>> 
+    create(Omega_h::Mesh& aMesh, Plato::DataMap dm = nullptr)
+    {
+        return std::make_shared<Plato::LinearTetCubRuleDegreeOne<SpatialDim>>(aMesh);
+    }
+};
+// class DegreeOneCubatureFactory
 
 } // namespace Plato
 

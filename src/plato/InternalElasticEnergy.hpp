@@ -50,7 +50,7 @@ class InternalElasticEnergy :
     
     IndicatorFunctionType m_indicatorFunction; /*!< penalty function */
     Plato::ApplyWeighting<mSpaceDim,m_numVoigtTerms,IndicatorFunctionType> m_applyWeighting; /*!< apply penalty function */
-    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
+    std::shared_ptr<Plato::CubatureRuleDegreeOne<EvaluationType::SpatialDim>> mCubatureRule;
 
     std::vector<std::string> m_plottable; /*!< database of output field names */
 
@@ -64,7 +64,7 @@ class InternalElasticEnergy :
     **********************************************************************************/
     InternalElasticEnergy(Omega_h::Mesh& aMesh,
                           Omega_h::MeshSets& aMeshSets,
-                          Plato::DataMap& aDataMap,
+                          Plato::DataMap aDataMap,
                           Teuchos::ParameterList& aProblemParams,
                           Teuchos::ParameterList& aPenaltyParams ) :
             Plato::AbstractScalarFunction<EvaluationType>(aMesh, aMeshSets, aDataMap, "Internal Elastic Energy"),
@@ -79,7 +79,7 @@ class InternalElasticEnergy :
         {
             m_plottable = aProblemParams.get < Teuchos::Array < std::string >> ("Plottable").toVector();
         }
-        Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+        Plato::DegreeOneCubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
         mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
 
     }

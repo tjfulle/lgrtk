@@ -55,13 +55,13 @@ class ThermostaticResidual :
 
     std::shared_ptr<Plato::NaturalBCs<SpaceDim,m_numDofsPerNode>> m_boundaryLoads;
 
-    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
+    std::shared_ptr<Plato::CubatureRuleDegreeOne<EvaluationType::SpatialDim>> mCubatureRule;
 
   public:
     /**************************************************************************/
     ThermostaticResidual(Omega_h::Mesh& aMesh,
                          Omega_h::MeshSets& aMeshSets,
-                         Plato::DataMap& aDataMap,
+                         Plato::DataMap aDataMap,
                          Teuchos::ParameterList& aProblemParams,
                          Teuchos::ParameterList& aPenaltyParams) :
             Plato::AbstractVectorFunction<EvaluationType>(aMesh, aMeshSets, aDataMap),
@@ -82,7 +82,7 @@ class ThermostaticResidual :
             (aMesh, aProblemParams.sublist("Natural Boundary Conditions"));
       }
     
-       Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+       Plato::DegreeOneCubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
        mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
 
     }

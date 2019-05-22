@@ -36,7 +36,7 @@ struct FunctionFactory
     std::shared_ptr<AbstractVectorFunction<EvaluationType>>
     createVectorFunction(Omega_h::Mesh& aMesh, 
                          Omega_h::MeshSets& aMeshSets, 
-                         Plato::DataMap& aDataMap, 
+                         Plato::DataMap aDataMap, 
                          Teuchos::ParameterList& aParamList,   
                          const std::string & aFunctionType)
     /******************************************************************************/
@@ -104,7 +104,7 @@ struct FunctionFactory
     std::shared_ptr<AbstractScalarFunction<EvaluationType>>
     createScalarFunction(Omega_h::Mesh& aMesh, 
                          Omega_h::MeshSets& aMeshSets, 
-                         Plato::DataMap& aDataMap, 
+                         Plato::DataMap aDataMap, 
                          Teuchos::ParameterList & aParamList, 
                          const std::string & aFunctionType)
     /******************************************************************************/
@@ -173,7 +173,7 @@ template<Plato::OrdinalType SpaceDimParam, Plato::OrdinalType NumControls = 1>
 class StructuralDynamics: public SimplexStructuralDynamics<SpaceDimParam, NumControls>
 {
 public:
-    using FunctionFactory = typename Plato::StructuralDynamicsFactory::FunctionFactory;
+    typedef Plato::StructuralDynamicsFactory::FunctionFactory FunctionFactory;
     using SimplexT = SimplexStructuralDynamics<SpaceDimParam, NumControls>;
     static constexpr int SpaceDim = SpaceDimParam;
 }; // class StructuralDynamics

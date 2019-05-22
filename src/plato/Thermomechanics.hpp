@@ -33,7 +33,7 @@ struct FunctionFactory
     std::shared_ptr<Plato::AbstractVectorFunction<EvaluationType>>
     createVectorFunction(Omega_h::Mesh& aMesh, 
                          Omega_h::MeshSets& aMeshSets,
-                         Plato::DataMap& aDataMap, 
+                         Plato::DataMap aDataMap, 
                          Teuchos::ParameterList& aParamList, 
                          std::string aStrVectorFunctionType)
     /******************************************************************************/
@@ -72,7 +72,7 @@ struct FunctionFactory
     std::shared_ptr<AbstractVectorFunctionInc<EvaluationType>>
     createVectorFunctionInc(Omega_h::Mesh& aMesh,
                             Omega_h::MeshSets& aMeshSets, 
-                            Plato::DataMap& aDataMap,
+                            Plato::DataMap aDataMap,
                             Teuchos::ParameterList& aParamList,
                             std::string strVectorFunctionType )
     /******************************************************************************/
@@ -106,7 +106,7 @@ struct FunctionFactory
     std::shared_ptr<Plato::AbstractScalarFunction<EvaluationType>>
     createScalarFunction(Omega_h::Mesh& aMesh,
                          Omega_h::MeshSets& aMeshSets,
-                         Plato::DataMap& aDataMap, 
+                         Plato::DataMap aDataMap, 
                          Teuchos::ParameterList & aParamList, 
                          std::string aStrScalarFunctionType)
     /******************************************************************************/
@@ -195,7 +195,7 @@ struct FunctionFactory
     std::shared_ptr<AbstractScalarFunctionInc<EvaluationType>>
     createScalarFunctionInc(Omega_h::Mesh& aMesh,
                             Omega_h::MeshSets& aMeshSets,
-                            Plato::DataMap& aDataMap,
+                            Plato::DataMap aDataMap,
                             Teuchos::ParameterList& aParamList,
                             std::string strScalarFunctionType )
     /******************************************************************************/
@@ -226,7 +226,7 @@ template<Plato::OrdinalType SpaceDimParam>
 class Thermomechanics: public Plato::SimplexThermomechanics<SpaceDimParam>
 {
 public:
-    using FunctionFactory = typename Plato::ThermomechanicsFactory::FunctionFactory;
+    typedef Plato::ThermomechanicsFactory::FunctionFactory FunctionFactory;
     using SimplexT = SimplexThermomechanics<SpaceDimParam>;
     static constexpr Plato::OrdinalType SpaceDim = SpaceDimParam;
 };

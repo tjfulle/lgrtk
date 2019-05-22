@@ -40,7 +40,7 @@ class Volume : public Plato::AbstractScalarFunction<EvaluationType>
     /**************************************************************************/
     Volume(Omega_h::Mesh& aMesh, 
            Omega_h::MeshSets& aMeshSets,
-           Plato::DataMap& aDataMap, 
+           Plato::DataMap aDataMap, 
            Teuchos::ParameterList&, 
            Teuchos::ParameterList& aPenaltyParams) :
             Plato::AbstractScalarFunction<EvaluationType>(aMesh, aMeshSets, aDataMap, "Volume"),

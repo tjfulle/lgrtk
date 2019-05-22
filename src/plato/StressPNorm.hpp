@@ -46,13 +46,13 @@ class StressPNorm :
     Plato::ApplyWeighting<SpaceDim,m_numVoigtTerms,IndicatorFunctionType> m_applyWeighting;
 
     Teuchos::RCP<TensorNormBase<m_numVoigtTerms,EvaluationType>> m_norm;
-    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
+    std::shared_ptr<Plato::CubatureRuleDegreeOne<EvaluationType::SpatialDim>> mCubatureRule;
 
   public:
     /**************************************************************************/
     StressPNorm(Omega_h::Mesh& aMesh,
                 Omega_h::MeshSets& aMeshSets,
-                Plato::DataMap& aDataMap, 
+                Plato::DataMap aDataMap, 
                 Teuchos::ParameterList& aProblemParams, 
                 Teuchos::ParameterList& aPenaltyParams) :
             Plato::AbstractScalarFunction<EvaluationType>(aMesh, aMeshSets, aDataMap, "Stress P-Norm"),
@@ -69,7 +69,7 @@ class StressPNorm :
       TensorNormFactory<m_numVoigtTerms, EvaluationType> normFactory;
       m_norm = normFactory.create(params);
 
-      Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+      Plato::DegreeOneCubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
       mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
 

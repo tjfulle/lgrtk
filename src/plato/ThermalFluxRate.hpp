@@ -43,7 +43,7 @@ class ThermalFluxRate :
     /**************************************************************************/
     ThermalFluxRate(Omega_h::Mesh& aMesh,
                     Omega_h::MeshSets& aMeshSets,
-                    Plato::DataMap& aDataMap,
+                    Plato::DataMap aDataMap,
                     Teuchos::ParameterList& problemParams) :
             Plato::AbstractScalarFunctionInc<EvaluationType>(aMesh, aMeshSets, aDataMap, "Thermal Flux Rate"),
             m_boundaryLoads(nullptr)

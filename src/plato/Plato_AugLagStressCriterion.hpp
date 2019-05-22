@@ -131,7 +131,7 @@ public:
      **********************************************************************************/
     AugLagStressCriterion(Omega_h::Mesh & aMesh,
                           Omega_h::MeshSets & aMeshSets,
-                          Plato::DataMap & aDataMap,
+                          Plato::DataMap aDataMap,
                           Teuchos::ParameterList & aInputParams) :
             Plato::AbstractScalarFunction<EvaluationType>(aMesh, aMeshSets, aDataMap, "Stress Constraint"),
             mPenalty(3),
@@ -160,7 +160,7 @@ public:
      * @param [in] aMeshSets side sets database
      * @param [in] aDataMap PLATO Engine and Analyze data map
      **********************************************************************************/
-    AugLagStressCriterion(Omega_h::Mesh & aMesh, Omega_h::MeshSets & aMeshSets, Plato::DataMap & aDataMap) :
+    AugLagStressCriterion(Omega_h::Mesh & aMesh, Omega_h::MeshSets & aMeshSets, Plato::DataMap aDataMap) :
             Plato::AbstractScalarFunction<EvaluationType>(aMesh, aMeshSets, aDataMap, "Stress Constraint"),
             mPenalty(3),
             mStressLimit(1),

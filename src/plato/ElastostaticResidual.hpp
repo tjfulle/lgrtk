@@ -63,7 +63,7 @@ private:
     std::shared_ptr<Plato::BodyLoads<mSpaceDim,m_numDofsPerNode>> m_bodyLoads;
     std::shared_ptr<Plato::NaturalBCs<mSpaceDim,m_numDofsPerNode>> m_boundaryLoads;
     std::shared_ptr<Plato::CellForcing<m_numVoigtTerms>> m_cellForcing;
-    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
+    std::shared_ptr<Plato::CubatureRuleDegreeOne<EvaluationType::SpatialDim>> mCubatureRule;
 
     std::vector<std::string> m_plottable;
 
@@ -78,7 +78,7 @@ public:
     **********************************************************************************/
     ElastostaticResidual(Omega_h::Mesh& aMesh,
                          Omega_h::MeshSets& aMeshSets,
-                         Plato::DataMap& aDataMap,
+                         Plato::DataMap aDataMap,
                          Teuchos::ParameterList& aProblemParams,
                          Teuchos::ParameterList& aPenaltyParams) :
             Plato::AbstractVectorFunction<EvaluationType>(aMesh, aMeshSets, aDataMap),
@@ -122,7 +122,7 @@ public:
         if( tResidualParams.isType<Teuchos::Array<std::string>>("Plottable") )
           m_plottable = tResidualParams.get<Teuchos::Array<std::string>>("Plottable").toVector();
 
-         Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+         Plato::DegreeOneCubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
          mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
 
@@ -168,6 +168,7 @@ public:
       Kokkos::parallel_for(Kokkos::RangePolicy<>(0, tNumCells), LAMBDA_EXPRESSION(const Plato::OrdinalType & aCellOrdinal)
       {
         tComputeGradient(aCellOrdinal, tGradient, aConfig, tCellVolume);
+
         tCellVolume(aCellOrdinal) *= tQuadratureWeights(aCellOrdinal);
 
         // compute strain

@@ -36,7 +36,7 @@ template<typename EvaluationType>
 inline std::shared_ptr<Plato::AbstractVectorFunction<EvaluationType>>
 elastostatics_residual(Omega_h::Mesh& aMesh,
                        Omega_h::MeshSets& aMeshSets,
-                       Plato::DataMap& aDataMap,
+                       Plato::DataMap aDataMap,
                        Teuchos::ParameterList& aInputParams,
                        const std::string & aFuncType)
 {
@@ -72,7 +72,7 @@ template<typename EvaluationType>
 inline std::shared_ptr<Plato::AbstractScalarFunction<EvaluationType>>
 stress_constraint_linear(Omega_h::Mesh& aMesh,
                          Omega_h::MeshSets& aMeshSets,
-                         Plato::DataMap& aDataMap,
+                         Plato::DataMap aDataMap,
                          Teuchos::ParameterList & aInputParams)
 {
     std::shared_ptr<Plato::AbstractScalarFunction<EvaluationType>> tOutput;
@@ -91,7 +91,7 @@ template<typename EvaluationType>
 inline std::shared_ptr<Plato::AbstractScalarFunction<EvaluationType>>
 stress_constraint_general(Omega_h::Mesh& aMesh,
                           Omega_h::MeshSets& aMeshSets,
-                          Plato::DataMap& aDataMap,
+                          Plato::DataMap aDataMap,
                           Teuchos::ParameterList & aInputParams)
 {
     std::shared_ptr<Plato::AbstractScalarFunction<EvaluationType>> tOutput;
@@ -111,7 +111,7 @@ template<typename EvaluationType>
 inline std::shared_ptr<Plato::AbstractScalarFunction<EvaluationType>>
 internal_elastic_energy(Omega_h::Mesh& aMesh,
                         Omega_h::MeshSets& aMeshSets,
-                        Plato::DataMap& aDataMap,
+                        Plato::DataMap aDataMap,
                         Teuchos::ParameterList & aInputParams,
                         const std::string & aFuncName)
 {
@@ -148,7 +148,7 @@ template<typename EvaluationType>
 inline std::shared_ptr<Plato::AbstractScalarFunction<EvaluationType>>
 stress_p_norm(Omega_h::Mesh& aMesh,
               Omega_h::MeshSets& aMeshSets,
-              Plato::DataMap& aDataMap,
+              Plato::DataMap aDataMap,
               Teuchos::ParameterList & aInputParams,
               const std::string & aFuncName)
 {
@@ -185,7 +185,7 @@ template<typename EvaluationType>
 inline std::shared_ptr<Plato::AbstractScalarFunction<EvaluationType>>
 effective_energy(Omega_h::Mesh& aMesh,
                  Omega_h::MeshSets& aMeshSets,
-                 Plato::DataMap& aDataMap,
+                 Plato::DataMap aDataMap,
                  Teuchos::ParameterList & aInputParams,
                  const std::string & aFuncName)
 {
@@ -222,7 +222,7 @@ template<typename EvaluationType>
 inline std::shared_ptr<Plato::AbstractScalarFunction<EvaluationType>>
 volume(Omega_h::Mesh& aMesh,
        Omega_h::MeshSets& aMeshSets,
-       Plato::DataMap& aDataMap,
+       Plato::DataMap aDataMap,
        Teuchos::ParameterList & aInputParams,
        const std::string & aFuncName)
 {
@@ -264,7 +264,7 @@ struct FunctionFactory
     std::shared_ptr<Plato::AbstractVectorFunction<EvaluationType>>
     createVectorFunction(Omega_h::Mesh& aMesh, 
                          Omega_h::MeshSets& aMeshSets,
-                         Plato::DataMap& aDataMap, 
+                         Plato::DataMap aDataMap, 
                          Teuchos::ParameterList& aInputParams,
                          std::string aFuncName)
     {
@@ -291,7 +291,7 @@ struct FunctionFactory
     std::shared_ptr<Plato::AbstractScalarFunction<EvaluationType>>
     createScalarFunction(Omega_h::Mesh& aMesh,
                          Omega_h::MeshSets& aMeshSets,
-                         Plato::DataMap& aDataMap, 
+                         Plato::DataMap aDataMap, 
                          Teuchos::ParameterList & aInputParams,
                          std::string aFuncName)
     {
@@ -337,7 +337,7 @@ template<Plato::OrdinalType SpaceDimParam>
 class Mechanics: public Plato::SimplexMechanics<SpaceDimParam>
 {
 public:
-    using FunctionFactory = typename Plato::MechanicsFactory::FunctionFactory;
+    typedef Plato::MechanicsFactory::FunctionFactory FunctionFactory;
     using SimplexT = SimplexMechanics<SpaceDimParam>;
     static constexpr Plato::OrdinalType SpaceDim = SpaceDimParam;
 };

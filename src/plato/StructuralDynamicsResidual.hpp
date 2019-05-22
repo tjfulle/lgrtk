@@ -69,7 +69,7 @@ private:
     std::shared_ptr<Plato::BodyLoads<m_numSpatialDims, m_numDofsPerNode>> mBodyLoads;
     std::shared_ptr<Plato::NaturalBCs<m_numSpatialDims, m_numDofsPerNode>> mBoundaryLoads;
 
-    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> mCubatureRule;
+    std::shared_ptr<Plato::CubatureRuleDegreeOne<EvaluationType::SpatialDim>> mCubatureRule;
 
 public:
     /******************************************************************************//**
@@ -84,7 +84,7 @@ public:
     **********************************************************************************/
     explicit StructuralDynamicsResidual(Omega_h::Mesh& aMesh,
                                         Omega_h::MeshSets& aMeshSets,
-                                        Plato::DataMap& aDataMap,
+                                        Plato::DataMap aDataMap,
                                         Teuchos::ParameterList & aProblemParams,
                                         Teuchos::ParameterList & aPenaltyParams) :
             AbstractVectorFunction<EvaluationType>(aMesh, aMeshSets, aDataMap),
@@ -101,7 +101,7 @@ public:
     {
         this->initialize(aMesh, aProblemParams);
 
-        Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+        Plato::DegreeOneCubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
         mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
 
@@ -116,7 +116,7 @@ public:
     **********************************************************************************/
     explicit StructuralDynamicsResidual(Omega_h::Mesh& aMesh,
                                         Omega_h::MeshSets& aMeshSets,
-                                        Plato::DataMap& aDataMap,
+                                        Plato::DataMap aDataMap,
                                         Teuchos::ParameterList & aProblemParams) :
             AbstractVectorFunction<EvaluationType>(aMesh, aMeshSets, aDataMap),
             mDensity(1.0),
@@ -132,7 +132,7 @@ public:
     {
         this->initialize(aMesh, aProblemParams);
 
-        Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+        Plato::DegreeOneCubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
         mCubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
 
@@ -146,7 +146,7 @@ public:
     **********************************************************************************/
     explicit StructuralDynamicsResidual(Omega_h::Mesh& aMesh,
                                         Omega_h::MeshSets& aMeshSets,
-                                        Plato::DataMap& aDataMap) :
+                                        Plato::DataMap aDataMap) :
             AbstractVectorFunction<EvaluationType>(aMesh, aMeshSets, aDataMap),
             mDensity(1.0),
             mMassPropDamp(0.0),
@@ -161,7 +161,7 @@ public:
     {
         this->initialize();
 
-        Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+        Plato::DegreeOneCubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
         mCubatureRule = tCubatureFactory.create(aMesh);
     }
 

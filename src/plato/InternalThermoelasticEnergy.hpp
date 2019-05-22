@@ -57,7 +57,7 @@ class InternalThermoelasticEnergy :
     Plato::ApplyWeighting<mSpaceDim, m_numVoigtTerms, IndicatorFunctionType> m_applyStressWeighting;
     Plato::ApplyWeighting<mSpaceDim, mSpaceDim,        IndicatorFunctionType> m_applyFluxWeighting;
 
-    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> m_CubatureRule;
+    std::shared_ptr<Plato::CubatureRuleDegreeOne<EvaluationType::SpatialDim>> m_CubatureRule;
 
     std::vector<std::string> m_plottable;
 
@@ -65,7 +65,7 @@ class InternalThermoelasticEnergy :
     /**************************************************************************/
     InternalThermoelasticEnergy(Omega_h::Mesh& aMesh,
                           Omega_h::MeshSets& aMeshSets,
-                          Plato::DataMap& aDataMap,
+                          Plato::DataMap aDataMap,
                           Teuchos::ParameterList& aProblemParams,
                           Teuchos::ParameterList& aPenaltyParams ) :
             Plato::AbstractScalarFunction<EvaluationType>(aMesh, aMeshSets, aDataMap, "Internal Thermoelastic Energy"),
@@ -80,7 +80,7 @@ class InternalThermoelasticEnergy :
       if( aProblemParams.isType<Teuchos::Array<std::string>>("Plottable") )
         m_plottable = aProblemParams.get<Teuchos::Array<std::string>>("Plottable").toVector();
 
-       Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+       Plato::DegreeOneCubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
        m_CubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
     }
 
@@ -182,7 +182,7 @@ class InternalThermoelasticEnergyInc :
     ApplyWeighting<SpaceDim, m_numVoigtTerms, IndicatorFunctionType> m_applyStressWeighting;
     ApplyWeighting<SpaceDim, SpaceDim,        IndicatorFunctionType> m_applyFluxWeighting;
 
-    std::shared_ptr<Plato::CubatureRule<EvaluationType::SpatialDim>> m_CubatureRule;
+    std::shared_ptr<Plato::CubatureRuleDegreeOne<EvaluationType::SpatialDim>> m_CubatureRule;
 
     std::vector<std::string> m_plottable;
 
@@ -190,7 +190,7 @@ class InternalThermoelasticEnergyInc :
     /**************************************************************************/
     InternalThermoelasticEnergyInc(Omega_h::Mesh& aMesh,
                           Omega_h::MeshSets& aMeshSets,
-                          Plato::DataMap& aDataMap,
+                          Plato::DataMap aDataMap,
                           Teuchos::ParameterList& aProblemParams,
                           Teuchos::ParameterList& aPenaltyParams ) :
             AbstractScalarFunctionInc<EvaluationType>(aMesh, aMeshSets, aDataMap, "Internal Thermoelastic Energy"),
@@ -205,7 +205,7 @@ class InternalThermoelasticEnergyInc :
       if( aProblemParams.isType<Teuchos::Array<std::string>>("Plottable") )
         m_plottable = aProblemParams.get<Teuchos::Array<std::string>>("Plottable").toVector();
 
-       Plato::CubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
+       Plato::DegreeOneCubatureFactory<EvaluationType::SpatialDim>  tCubatureFactory;
        m_CubatureRule = tCubatureFactory.create(aMesh, aProblemParams);
 
     }

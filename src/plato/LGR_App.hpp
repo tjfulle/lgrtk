@@ -294,14 +294,14 @@ public:
         auto tFieldName = tTokens[0];
         auto tDataMap = m_problem->getDataMap();
         // element ScalarVector?
-        if(tDataMap.scalarVectors.count(tFieldName))
+        if(tDataMap->scalarVectors.count(tFieldName))
         {
-            auto tData = tDataMap.scalarVectors.at(tFieldName);
+            auto tData = tDataMap->scalarVectors.at(tFieldName);
             this->copyFieldFromlgr(tData, aSharedField);
         }
-        else if(tDataMap.scalarMultiVectors.count(tFieldName))
+        else if(tDataMap->scalarMultiVectors.count(tFieldName))
         {
-            auto tData = tDataMap.scalarMultiVectors.at(tFieldName);
+            auto tData = tDataMap->scalarMultiVectors.at(tFieldName);
             Plato::OrdinalType tComponentIndex = 0;
             if(tTokens.size() > 1)
             {
@@ -309,7 +309,7 @@ public:
             }
             this->copyFieldFromlgr(tData, tComponentIndex, aSharedField);
         }
-        else if(tDataMap.scalarArray3Ds.count(tFieldName))
+        else if(tDataMap->scalarArray3Ds.count(tFieldName))
         {
         }
     }

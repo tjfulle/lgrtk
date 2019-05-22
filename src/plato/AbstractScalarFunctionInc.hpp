@@ -19,7 +19,7 @@ class AbstractScalarFunctionInc
 {
 protected:
     Omega_h::Mesh& mMesh; /*!< volume mesh database */
-    Plato::DataMap& m_dataMap; /*!< PLATO Analyze database */
+    Plato::DataMap m_dataMap; /*!< PLATO Analyze database */
     Omega_h::MeshSets& mMeshSets; /*!< surface mesh database */
 
     const std::string m_functionName; /*!< name of scalar function */
@@ -34,7 +34,7 @@ public:
     **********************************************************************************/
     AbstractScalarFunctionInc(Omega_h::Mesh& aMesh,
                               Omega_h::MeshSets& aMeshSets,
-                              Plato::DataMap& aDataMap,
+                              Plato::DataMap aDataMap,
                               std::string aName) :
             mMesh(aMesh),
             m_dataMap(aDataMap),

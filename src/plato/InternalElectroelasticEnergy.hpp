@@ -67,7 +67,7 @@ class InternalElectroelasticEnergy :
     **********************************************************************************/
     InternalElectroelasticEnergy(Omega_h::Mesh& aMesh,
                           Omega_h::MeshSets& aMeshSets,
-                          Plato::DataMap& aDataMap,
+                          Plato::DataMap aDataMap,
                           Teuchos::ParameterList& aProblemParams,
                           Teuchos::ParameterList& aPenaltyParams ) :
             Plato::AbstractScalarFunction<EvaluationType>(aMesh, aMeshSets, aDataMap, "Internal Electroelastic Energy"),

@@ -8,6 +8,7 @@
 #define SRC_PLATO_PLATOSTATICSTYPES_HPP_
 
 #include <map>
+#include <memory>
 
 #include "alg/CrsMatrix.hpp"
 #include "PlatoTypes.hpp"
@@ -32,13 +33,16 @@ template <typename ScalarType>
 using ScalarArray3DT = typename Kokkos::View<ScalarType***, Kokkos::LayoutRight, Plato::MemSpace>;
 using ScalarArray3D  = ScalarArray3DT<Plato::Scalar>;
 
-struct DataMap
+struct RawDataMap
 {
   std::map<std::string, Plato::ScalarVector> scalarVectors;
   std::map<std::string, Plato::ScalarMultiVector> scalarMultiVectors;
   std::map<std::string, Plato::ScalarArray3D> scalarArray3Ds;
 };
 // struct DataMap
+
+using DataMap = std::shared_ptr<Plato::RawDataMap>;
+
 
 } // namespace Plato
 

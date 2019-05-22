@@ -27,7 +27,10 @@ struct partial
 **********************************************************************************/
 class AbstractProblem
 {
-public:
+  protected:
+    Plato::DataMap mDataMap;
+
+  public:
     /******************************************************************************//**
      * @brief PLATO abstract problem destructor
     **********************************************************************************/
@@ -190,11 +193,16 @@ public:
      * @brief Return PLATO Analyze data map that enables import/export rights to PLATO Engine
      * @return PLATO Analyze data map
     **********************************************************************************/
-    Plato::DataMap mDataMap;
-    decltype(mDataMap)& getDataMap()
+    decltype(mDataMap) getDataMap()
     {
         return mDataMap;
     }
+
+    AbstractProblem()
+    {
+        mDataMap = std::make_shared<Plato::RawDataMap>();
+    }
+
 };
 // end class AbstractProblem
 
