@@ -26,12 +26,15 @@ void read_and_validate_elastic_params(
       Omega_h_fail("%s\n", str.c_str());
     }
   }
-  if (!pl.is<double>("E")) {
-    Omega_h_fail("Young's modulus \"E\" modulus must be defined");
-  }
-  double E = pl.get<double>("E");
-  if (E <= 0.) {
-    Omega_h_fail("Young's modulus \"E\" must be positive");
+  double E = 0.0;
+  if (!params.is_map("equation of state")) {
+    if (!pl.is<double>("E")) {
+      Omega_h_fail("Young's modulus \"E\" modulus must be defined");
+    }
+    E = pl.get<double>("E");
+    if (E <= 0.) {
+      Omega_h_fail("Young's modulus \"E\" must be positive");
+    }
   }
   if (!pl.is<double>("Nu")) {
     Omega_h_fail("Poisson's ratio \"Nu\" must be defined");

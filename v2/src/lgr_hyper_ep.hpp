@@ -381,13 +381,12 @@ scalar_damage(double& dp, double const pres, Tensor<3> const s,
 
 // Returns the Mandel stress
 OMEGA_H_INLINE void
-mandel(double& pres, Tensor<3>& s,
-    Tensor<3> const F, Tensor<3> const Fp, Properties const props)
+mandel(double const kappa, double const mu,
+       Tensor<3> const F, Tensor<3> const Fp,
+       double& pres, Tensor<3>& s)
 {
   auto const Fe = F * invert(Fp);
-  auto const kappa = props.E / (3.0 * (1.0 - 2.0 * props.Nu));
-  auto const mu = props.E / 2.0 / (1.0 + props.Nu);
-  auto const lambda = 2.0 * mu * props.Nu / (1.0 - 2.0 * props.Nu);
+  auto const lambda = kappa - 2 * mu / 3;
 
   // elastic log strain: 1/2 log(Ce)
   auto const Ce = transpose(Fe) * Fe;
@@ -405,43 +404,25 @@ mandel(double& pres, Tensor<3>& s,
 
 /** \brief High-level wrapper around elastic update */
 OMEGA_H_INLINE void
-elastic(double& pres, Tensor<3>& s, double& wave_speed,
-    double const J, Tensor<3> const F, Tensor<3> const Fp,
-    double const rho, Properties const props)
+elastic(Elastic const model, double const kappa, double const mu,
+        double const /* J */, Tensor<3> const F, Tensor<3> const Fp,
+        double& pres, Tensor<3>& s)
 {
-  if (props.elastic == Elastic::MANDEL)
+  if (model == Elastic::MANDEL)
   {
-    mandel(pres, s, F, Fp, props);
+    mandel(kappa, mu, F, Fp, pres, s);
   }
   else
   {
     Omega_h_fail("Unsupported elastic type");
   }
   OMEGA_H_CHECK(is_deviatoric(s));
-
-  double K = 0.0;
-  if (props.eos == EOS::MIE_GRUNEISEN) {
-    // Replace pressure with that computed from EOS if needed.
-    double c = 0.0;
-    mie_gruneisen_update(props.rho0, props.gamma0, props.cs, props.s1,
-                         rho, props.e0, pres, c);
-    K = rho * c * c;
-  } else {
-    // wave speed
-    auto kappa = props.E / (3.0 * (1.0 - 2.0 * props.Nu));
-    K = 0.5 * kappa * (J + 1.0 / J);
-  }
-  auto const H = 3.0 * K * (1.0 - props.Nu) / (1 + props.Nu);
-  OMEGA_H_CHECK(H > 0.0);
-  wave_speed = std::sqrt(H / rho);
-  OMEGA_H_CHECK(wave_speed > 0.0);
 }
 
 
 OMEGA_H_INLINE bool
-at_yield(Tensor<3> const s,
-    double const ep, double const epdot, double const temp,
-    Properties const props)
+at_yield(Properties const props, double const temp,
+  Tensor<3> const s, double const ep, double const epdot)
 {
   // check the yield condition
   auto const smag = Omega_h::norm(s);
@@ -465,15 +446,14 @@ at_yield(Tensor<3> const s,
  *
  */
 OMEGA_H_INLINE void
-radial_return(Tensor<3>& s, double const /*J*/, Tensor<3> const /*F*/, Tensor<3>& Fp,
-    double& ep, double& epdot, double const temp, double const /*dtime*/,
-    Properties const props)
+radial_return(double const mu, Properties const props, double const /*J*/,
+  Tensor<3> const /*F*/, double const temp, double const /*dtime*/,
+  Tensor<3>& s, Tensor<3>& Fp, double& ep, double& epdot)
 {
   OMEGA_H_CHECK(is_deviatoric(s));
   double const sq32 = std::sqrt(3.0 / 2.0);
   double const tol = 1.0E-10;
 
-  auto const mu = props.E / (2.0 * (1.0 + props.Nu));
   auto const seff = sq32 * Omega_h::norm(s);
 
   auto Y = Omega_h::ArithTraits<double>::max();
@@ -657,14 +637,40 @@ update(Properties const props, double const rho, Tensor<3> const F,
   auto const J = determinant(F);
 
   Tensor<3> s;
-  double pres = 0.0;
+  double K = 0.0;
+  double peos = 0.0;
+
+  if (props.eos == EOS::MIE_GRUNEISEN) {
+    // Compute pressure from EOS
+    mie_gruneisen_update(props.rho0, props.gamma0, props.cs, props.s1,
+                         rho, props.e0, peos, c);
+    K = rho * c * c;
+  } else {
+    // wave speed
+    auto kappa = props.E / (3.0 * (1.0 - 2.0 * props.Nu));
+    K = 0.5 * kappa * (J + 1.0 / J);
+  }
+
+  // Allow shear modulus to change with K, in the event that K comes from the
+  // EOS
+  auto const mu = 3 * K * (1 - 2 * props.Nu) / (2 * (1 + props.Nu))
 
   // Determine the stress predictor.
-  elastic(pres, s, wave_speed, J, F, Fp, rho, props);
+  double pelas = 0.0;
+  elastic(props.elastic, K, mu, pelas, s, F, Fp);
+
+  // Transfer correct pressure
+  auto const pres = (props.eos == EOS::NONE) ? pelas : peos;
+
+  auto const H = K + 4 * mu / 3;
+  OMEGA_H_CHECK(H > 0.0);
+  wave_speed = std::sqrt(H / rho);
+  OMEGA_H_CHECK(wave_speed > 0.0);
 
   // check the yield condition
-  if (at_yield(s, ep, epdot, temp, props))
-    radial_return(s, J, F, Fp, ep, epdot, temp, dtime, props);
+  if (at_yield(props, temp, s, ep, epdot)) {
+    radial_return(mu, props, J, F, temp, dtime, s, Fp, ep, epdot);
+  }
 
   // compute stress
   auto const I = Omega_h::identity_matrix<3, 3>();
